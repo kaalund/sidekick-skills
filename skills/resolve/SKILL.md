@@ -11,7 +11,7 @@ Work out which Figma file and which local folder this session is about. Keep it 
 
 2. **Figma file key.** Take it from, in order: a Figma URL the user gave; the `fileKey` in a `.design-memory.json` in the current directory (older projects); otherwise ask for the URL. The key is the path segment after `/design/`. For `/design/<fileKey>/branch/<branchKey>/...` URLs use the branch key.
 
-3. **Config.** The config lives at `~/.design-memory/config.json` (expand `~`; if the user names another path for testing, use that). If it does not exist, create the directory and file with `version: 1`, `files: {}`, `catalog: []`. Do not ask about `workspaceRoot`: leave it unset unless a skill needs it for a separate project folder (step 4d).
+3. **Config.** The config lives in the shared design folder, at `<folder>/.design-memory/config.json`. Find the folder in this order: the current directory, if it has `.design-memory/config.json` or a `.claude/settings.json` that enables `design-memory`; else `folder` in `~/Library/Application Support/Sidekick/environment.json` (expand `~`); else `~/design-workspace`. If the user names another path for testing, use that. If the config does not exist, create the directory and file with `version: 1`, `files: {}`, `catalog: []`. Do not ask about `workspaceRoot`: leave it unset unless a skill needs it for a separate project folder (step 4d).
 
 4. **Folder.** Every file normally lives in one shared design folder (a git repo with the design plugins enabled in its `.claude/settings.json`). Resolve in this order:
    a. `files[<fileKey>]` exists in the config and its `path` exists on disk: use it, and its `slug` if it has one.

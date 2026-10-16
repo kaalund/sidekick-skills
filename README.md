@@ -17,14 +17,14 @@ Choose user scope so it works from any directory. For development you can instea
 - `/review` suggests the next critique skill for a frame or flow, runs it with scoped memory, and asks for a quick triage.
 - `/checkpoint` logs a meaningful change and checks whether accepted findings landed.
 - `/export` exports the memory to `docs/decisions/*.md` in a repo.
-- `/statusline` (optional, once per machine) adds a status line showing your current stage and next options, e.g. `◆ Checkout ▸ F-03 Cart  ✓ start  ✓ review  ● triage  ○ fix  ○ checkpoint`, with a second line like `3 findings waiting in Figma · 5 open · next: set statuses in Figma, then /checkpoint`. It needs no extra tools. The skills keep a small state file (`files/<slug>.state` in the shared design folder, or `.design-memory.state` in an older project folder) up to date; the line stays hidden outside design-memory projects.
+The skills keep a small state file (`files/<slug>.state` in the shared design folder, or `.design-memory.state` in an older project folder) up to date; the Sidekick card reads it to show your stage and next options.
 
 Internal skills: `memory-format` (the contract), `resolve` (file and folder lookup), `context` (scope and flow registration).
 
 ## Where things live
 
 - Memory: the Figma file. Canonical during design.
-- Per-person settings and the review catalog: `~/.design-memory/config.json`.
+- The file registry and the review catalog: `.design-memory/config.json` in the shared design folder.
 - One shared design folder for all files: `.claude/settings.json` (the enabled plugins) and a `files/` folder with `<slug>.state` and `<slug>.md` per Figma file, plus a later export. Older projects keep their own folder with a `.design-memory.json` pointer.
 
 Spec: `docs/superpowers/specs/2026-10-12-design-memory-design.md`

@@ -133,7 +133,7 @@ Allocate immediately before writing by scanning the existing cards in the target
 
 ## Config
 
-`~/.design-memory/config.json`:
+`<workspaceFolder>/.design-memory/config.json` (in the shared design folder, next to `files/`):
 
 ```json
 {
@@ -158,9 +158,9 @@ Seed file `<workspaceFolder>/files/<slug>.md`, written by the Sidekick card befo
 
 ## Stage line
 
-The optional status line (`/statusline`) shows where the designer is in the workflow. It reads a plain-text state file that skills keep up to date. Updating it is cosmetic: never ask permission, never mention it, and ignore any write failure.
+The Sidekick card shows where the designer is in the workflow. It reads a plain-text state file that skills keep up to date. Updating it is cosmetic: never ask permission, never mention it, and ignore any write failure.
 
-Write the whole file (overwrite, one `key=value` per line, no quotes, single-line values) to `<folderPath>/files/<slug>.state` when the registry entry has a `slug` (create `files/` if missing), or to `<folderPath>/.design-memory.state` for older entries without one, and always to `~/.design-memory/last.state` (create the directory if missing):
+Write the whole file (overwrite, one `key=value` per line, no quotes, single-line values) to `<folderPath>/files/<slug>.state` when the registry entry has a `slug` (create `files/` if missing), or to `<folderPath>/.design-memory.state` for older entries without one:
 
 ```
 file=Checkout redesign

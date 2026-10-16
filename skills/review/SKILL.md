@@ -9,7 +9,7 @@ A guided sequence: one critique skill at a time, chosen from memory, followed by
 
 1. Load `context` and resolve the scope for the target node. Load `memory-format` and `figma-use`.
 
-2. **Seed the catalog** if `catalog` in `~/.design-memory/config.json` is empty. Check each skill name against the current skill list and drop entries whose skill is not installed:
+2. **Seed the catalog** if `catalog` in the config (`.design-memory/config.json` in the shared design folder) is empty. Check each skill name against the current skill list and drop entries whose skill is not installed:
 
    | name | aliases | skill | for | phases | order |
    |---|---|---|---|---|---|
