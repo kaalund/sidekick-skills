@@ -1,0 +1,30 @@
+# design-memory
+
+A Claude Code plugin that gives a Figma file a memory: brief, decisions, change log, critique findings and open questions, all kept as visible nodes on a `🤖 Agentic Memory` page. Findings are instances of a `Finding` component (in `06 Components`) placed directly below the frame they are about, not on the Memory page, with a Status variant (Open, Will do, On hold, Dismissed, Done), so you can triage in Figma at any time and the agent reads it back. The AI drafts and logs; the designer approves.
+
+## Install
+
+```
+/plugin marketplace add /Users/peter/dev/sidekick
+/plugin install design-memory@sidekick
+```
+
+Choose user scope so it works from any directory. For development you can instead start Claude Code with `claude --plugin-dir /Users/peter/dev/sidekick/plugins/design-memory`. The Sidekick app does this for you: its Set up button adds the marketplace and enables the plugin in the shared design folder.
+
+## Commands
+
+- `/start` sets up the Memory page, interviews you for the project brief, and creates a local folder.
+- `/review` suggests the next critique skill for a frame or flow, runs it with scoped memory, and asks for a quick triage.
+- `/checkpoint` logs a meaningful change and checks whether accepted findings landed.
+- `/export` exports the memory to `docs/decisions/*.md` in a repo.
+- `/statusline` (optional, once per machine) adds a status line showing your current stage and next options, e.g. `◆ Checkout ▸ F-03 Cart  ✓ start  ✓ review  ● triage  ○ fix  ○ checkpoint`, with a second line like `3 findings waiting in Figma · 5 open · next: set statuses in Figma, then /checkpoint`. It needs no extra tools. The skills keep a small state file (`files/<slug>.state` in the shared design folder, or `.design-memory.state` in an older project folder) up to date; the line stays hidden outside design-memory projects.
+
+Internal skills: `memory-format` (the contract), `resolve` (file and folder lookup), `context` (scope and flow registration).
+
+## Where things live
+
+- Memory: the Figma file. Canonical during design.
+- Per-person settings and the review catalog: `~/.design-memory/config.json`.
+- One shared design folder for all files: `.claude/settings.json` (the enabled plugins) and a `files/` folder with `<slug>.state` and `<slug>.md` per Figma file, plus a later export. Older projects keep their own folder with a `.design-memory.json` pointer.
+
+Spec: `docs/superpowers/specs/2026-10-12-design-memory-design.md`

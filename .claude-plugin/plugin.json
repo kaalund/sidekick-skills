@@ -1,0 +1,8 @@
+{
+  "name": "design-memory",
+  "version": "0.1.0",
+  "description": "A design memory layer for Figma: keeps the brief, decisions, change log and critique findings in the file, and guides scoped reviews.",
+  "author": { "name": "Peter" },
+  "keywords": ["figma", "design", "memory", "adl", "critique", "export"],
+  "license": "MIT"
+}
