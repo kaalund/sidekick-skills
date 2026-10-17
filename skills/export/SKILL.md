@@ -29,4 +29,4 @@ Export the memory from Figma into a repo. This is a one-way transfer; afterwards
 
 7. Do not delete or alter any other Figma memory.
 
-8. **Stage line** (`memory-format`). Set `stage=export`, `detail=exporting to <path>` at step 4, and after step 6 `stage=idle`, `detail=repo copy is canonical`, `next=work continues in the repo`.
+8. **Stage line** (`memory-format`). Set `stage=export`, `detail=exporting to <path>` at step 4, and after step 6 `stage=idle`, `detail=repo copy is canonical`.

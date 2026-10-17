@@ -157,21 +157,18 @@ The Sidekick card shows where the designer is in the workflow. It reads a plain-
 Write the whole file (overwrite, one `key=value` per line, no quotes, single-line values) to `<folderPath>/files/<slug>.state` (create `files/` if missing):
 
 ```
-file=Checkout redesign
 flow=F-03 Cart
 stage=triage
 detail=3 findings waiting in Figma
 open=5
-next=
 phase=refine
 actions=UX critique|/design-memory:review ux;Checkpoint|/design-memory:checkpoint
 ```
 
-- `file`: the Figma file name. `flow`: the flow in scope as `<id> <name>`, or empty.
+- `flow`: the flow in scope as `<id> <name>`, or empty.
 - `stage`: one of `start`, `review`, `triage`, `fix`, `checkpoint`, `export`, `idle`.
 - `detail`: a short phrase for what is happening right now (max ~40 chars), or empty.
 - `open`: count of findings in scope with status Open, Will do or On hold (from `readFindings`); `0` or empty if unknown.
-- `next`: optional, and normally empty now. The card no longer shows it.
 - `phase`: `explore`, `refine`, `polish` or `handoff`, copied from the brief's `phase` in `memory/index/project`; empty if unknown. Every skill that writes the file keeps it.
 - `actions`: the next-step offers shown as buttons in the Sidekick card, as `label|command` pairs separated by `;` (labels have no `|` or `;`; commands start with `/design-memory:`; at most three; empty while a skill is running). Example: `UX critique|/design-memory:review ux;Checkpoint|/design-memory:checkpoint`.
 

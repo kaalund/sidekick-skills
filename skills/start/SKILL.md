@@ -43,4 +43,4 @@ Set up the design memory for a Figma file, then interview the designer to captur
 
 8. **Folder.** `resolve` already registered the file. In the shared design folder there is nothing more to set up: the folder, its git repo and its `.claude/settings.json` already exist (the Sidekick card sets them up).
 
-9. End with two lines: what was created, and the suggested next step (run `/review` on a frame). Update the stage line (`memory-format`): `stage=start`, `detail=brief written`, `next=/review`. Also set `stage=start`, `detail=brief interview` when you start step 5, and mention once that `/statusline` shows the workflow stage in the status line if they have not set it up.
+9. End with two lines: what was created, and the suggested next step (run `/review` on a frame). Update the stage line (`memory-format`): `stage=start`, `detail=brief written`. Also set `stage=start`, `detail=brief interview` when you start step 5, and mention once that `/statusline` shows the workflow stage in the status line if they have not set it up.

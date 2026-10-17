@@ -58,4 +58,4 @@ A guided sequence: one critique skill at a time, chosen from memory, followed by
     - findings still `Open` or `On hold`: `stage=triage`, `detail=<n> findings waiting in Figma`
     - nothing pending: `stage=idle`, `detail=` (empty)
 
-    Leave `next` empty: nothing steers the designer to checkpoint or export. Write `actions` instead (format in `memory-format`): the next suggested review from step 12 (label its friendly name, command `/design-memory:review <first alias>`), a second suggestion if there is one, and `Checkpoint|/design-memory:checkpoint` last, only when findings are `Will do` or `Done`. At most three. Never offer Export.
+    Nothing steers the designer to checkpoint or export. Write `actions` (format in `memory-format`): the next suggested review from step 12 (label its friendly name, command `/design-memory:review <first alias>`), a second suggestion if there is one, and `Checkpoint|/design-memory:checkpoint` last, only when findings are `Will do` or `Done`. At most three. Never offer Export.

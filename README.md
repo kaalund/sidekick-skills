@@ -13,7 +13,7 @@ Choose user scope so it works from any directory. For development you can instea
 
 ## Commands
 
-- `/start` sets up the Memory page, interviews you for the project brief, and creates a local folder.
+- `/start` sets up the Memory page, interviews you for the project brief, and registers the file in the shared design folder.
 - `/review` suggests the next critique skill for a frame or flow, runs it with scoped memory, and asks for a quick triage.
 - `/checkpoint` logs a meaningful change and checks whether accepted findings landed.
 - `/export` exports the memory to `docs/decisions/*.md` in a repo.
