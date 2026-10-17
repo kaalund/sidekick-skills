@@ -26,5 +26,3 @@ Internal skills: `memory-format` (the contract), `resolve` (file and folder look
 - Memory: the Figma file. Canonical during design.
 - The file registry and the review catalog: `.design-memory/config.json` in the shared design folder.
 - One shared design folder for all files: `.claude/settings.json` (the enabled plugins) and a `files/` folder with `<slug>.state` and `<slug>.md` per Figma file, plus a later export. Older projects keep their own folder with a `.design-memory.json` pointer.
-
-Spec: `docs/superpowers/specs/2026-10-12-design-memory-design.md`
