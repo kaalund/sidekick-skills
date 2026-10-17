@@ -17,7 +17,7 @@ Choose user scope so it works from any directory. For development you can instea
 - `/review` suggests the next critique skill for a frame or flow, runs it with scoped memory, and asks for a quick triage.
 - `/checkpoint` logs a meaningful change and checks whether accepted findings landed.
 - `/export` exports the memory to `docs/decisions/*.md` in a repo.
-The skills keep a small state file (`files/<slug>.state` in the shared design folder, or `.design-memory.state` in an older project folder) up to date; the Sidekick card reads it to show your stage and next options.
+The skills keep a small state file (`files/<slug>.state` in the shared design folder) up to date; the Sidekick card reads it to show your stage and next options.
 
 Internal skills: `memory-format` (the contract), `resolve` (file and folder lookup), `context` (scope and flow registration).
 
@@ -25,4 +25,4 @@ Internal skills: `memory-format` (the contract), `resolve` (file and folder look
 
 - Memory: the Figma file. Canonical during design.
 - The file registry and the review catalog: `.design-memory/config.json` in the shared design folder.
-- One shared design folder for all files: `.claude/settings.json` (the enabled plugins) and a `files/` folder with `<slug>.state` and `<slug>.md` per Figma file, plus a later export. Older projects keep their own folder with a `.design-memory.json` pointer.
+- One shared design folder for all files: `.claude/settings.json` (the enabled plugins) and a `files/` folder with `<slug>.state` and `<slug>.md` per Figma file, plus a later export.

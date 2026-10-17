@@ -146,13 +146,7 @@ Allocate immediately before writing by scanning the existing cards in the target
 }
 ```
 
-`workspaceFolder` is the shared design folder: one git repo for all Figma files, holding `.claude/settings.json` (the enabled design plugins) and a `files/` folder with `<slug>.state` (the stage line) and `<slug>.md` (the onboarding seed, later a copy of the brief) per Figma file. `kind` is `new` or `linked-repo`. Entries without a `slug` are older projects with their own folder. `workspaceRoot` is only used for those separate project folders. The `catalog` array is seeded by `review`. Optional: `findingComponentKey`, the key of the published `Finding` component set.
-
-Pointer file `<folder>/.design-memory.json`, only for separate project folders (entries without a `slug`):
-
-```json
-{ "fileKey": "FIGMAFILEKEY", "url": "https://www.figma.com/design/FIGMAFILEKEY/Checkout-redesign", "name": "Checkout redesign" }
-```
+`workspaceFolder` is the shared design folder: one git repo for all Figma files, holding `.claude/settings.json` (the enabled design plugins) and a `files/` folder with `<slug>.state` (the stage line) and `<slug>.md` (the onboarding seed, later a copy of the brief) per Figma file. Every entry has a `slug`; an entry without one is ignored. `kind` is `new`, or `linked-repo` once an export has made a repo copy canonical. The `catalog` array is seeded by `review`. Optional: `findingComponentKey`, the key of the published `Finding` component set.
 
 Seed file `<workspaceFolder>/files/<slug>.md`, written by the Sidekick card before it launches `start`: a `---` header with `fileKey`, `name`, `slug` and `url`, then one `##` section per answer (Purpose and problem, Users and audience, Goals and success, Scope of this file, Platform, Brand, Current phase). `unknown` means the designer skipped the question.
 
@@ -160,7 +154,7 @@ Seed file `<workspaceFolder>/files/<slug>.md`, written by the Sidekick card befo
 
 The Sidekick card shows where the designer is in the workflow. It reads a plain-text state file that skills keep up to date. Updating it is cosmetic: never ask permission, never mention it, and ignore any write failure.
 
-Write the whole file (overwrite, one `key=value` per line, no quotes, single-line values) to `<folderPath>/files/<slug>.state` when the registry entry has a `slug` (create `files/` if missing), or to `<folderPath>/.design-memory.state` for older entries without one:
+Write the whole file (overwrite, one `key=value` per line, no quotes, single-line values) to `<folderPath>/files/<slug>.state` (create `files/` if missing):
 
 ```
 file=Checkout redesign
