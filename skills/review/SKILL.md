@@ -11,18 +11,18 @@ A guided sequence: one critique skill at a time, chosen from memory, followed by
 
 2. **Seed the catalog** if `catalog` in the config (`.design-memory/config.json` in the shared design folder) is empty. Check each skill name against the current skill list and drop entries whose skill is not installed:
 
-   | name | aliases | skill | for | phases | order |
-   |---|---|---|---|---|---|
-   | Cognitive load | load, cognitive | `cognitive-accessibility:assess-load` | flow clarity and mental effort | explore, refine | 1 |
-   | UX critique | ux | `visual-critique:critique-ux` | flow and interaction problems | explore, refine | 2 |
-   | Content | content, copy | `accessible-content:review` | headings, labels, readability | refine, polish | 3 |
-   | Visual critique | visual, critique | `visual-critique:critique-screen` | hierarchy, color, type, composition | refine, polish | 4 |
-   | Accessibility decisions | a11y | `accessibility-decisions:review` | accessibility decisions and debt | polish, handoff | 5 |
+   | name | aliases | skill | for | order |
+   |---|---|---|---|---|
+   | Cognitive load | load, cognitive | `cognitive-accessibility:assess-load` | flow clarity and mental effort | 1 |
+   | UX critique | ux | `visual-critique:critique-ux` | flow and interaction problems | 2 |
+   | Content | content, copy | `accessible-content:review` | headings, labels, readability | 3 |
+   | Visual critique | visual, critique | `visual-critique:critique-screen` | hierarchy, color, type, composition | 4 |
+   | Accessibility decisions | a11y | `accessibility-decisions:review` | accessibility decisions and debt | 5 |
 
-   Store entries as `{ "name", "aliases", "skill", "for", "phases", "order" }`. The designer can add or edit entries; honor them.
+   Store entries as `{ "name", "aliases", "skill", "for", "order" }`. The designer can add or edit entries; honor them.
 
 3. **Choose the next review.** Start from catalog `order`, then adjust with memory:
-   - Filter by the brief's `phase` (from `memory/index/project` or the flow context).
+   - Prefer checks that have not run on this scope yet: compare the catalog with the `skill` and dates of the findings for the scope and with the flow's `last_review` in `memory/index/status`.
    - Skip a review run recently on an unchanged frame (compare the flow's line in `memory/index/fingerprint` and the dates of findings for that skill).
    - Re-suggest a review when the frame changed after its last run.
    - Move a skill up when open questions in scope point at it.
@@ -53,7 +53,7 @@ A guided sequence: one critique skill at a time, chosen from memory, followed by
 
 12. **Update status and re-evaluate.** Update the flow's line in `memory/index/status` (`last_review`, `next`, `open_q`). Then suggest the next review with a reason, or say "that's enough for now". If accepted findings imply layout changes, say "apply those first, then I'll pick up with <next>" and stop.
 
-13. **Stage line** (`memory-format`). Keep it current throughout: at step 5 `stage=review`, `detail=choosing review`, `actions=` (empty); at step 6 `detail=running <review name>`; at step 8 `stage=triage`, `detail=<n> findings on the canvas`. After step 12 set `open` from `readFindings`, copy `phase` from `memory/index/project`, and set:
+13. **Stage line** (`memory-format`). Keep it current throughout. The review has three steps for the card's progress bar: reading context (steps 1 to 5), running the critique (steps 6 and 7), writing findings to Figma (step 8). At step 1 write `stage=review`, `detail=reading context`, `progress=1/3`; at step 5 `detail=choosing review`, `actions=` (empty); at step 6 `detail=running <review name>`, `progress=2/3`; at step 8 `stage=triage`, `detail=writing findings to Figma`, `progress=3/3`. After step 12 clear `progress`, set `last=<review name>`, set `open`, `p1`, `p2`, `p3`, `f1`, `f2` and `f3` from `readFindings`, and set:
     - findings with status `Will do` or accepted layout changes: `stage=fix`, `detail=<n> changes to apply`
     - findings still `Open` or `On hold`: `stage=triage`, `detail=<n> findings waiting in Figma`
     - nothing pending: `stage=idle`, `detail=` (empty)

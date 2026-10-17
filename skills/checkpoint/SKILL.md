@@ -32,4 +32,4 @@ Log a meaningful change in the design memory. You draft; the designer approves. 
 
 10. **PM note.** Finish with one or two lines on what looks neglected (reviews never run, questions open a long time, decisions without a `why`) and the suggested next step. Suggestions only.
 
-11. **Stage line** (`memory-format`). At step 2 set `stage=checkpoint`, `detail=comparing to last checkpoint`. After step 10 set `open` from `readFindings` and `stage=triage` (`detail=<n> findings waiting in Figma`) if open findings remain, otherwise `stage=idle`.
+11. **Stage line** (`memory-format`). At step 2 set `stage=checkpoint`, `detail=comparing to last checkpoint`. After step 10 set `open`, `p1`, `p2`, `p3`, `f1`, `f2` and `f3` from `readFindings`, copy `last` over from the existing state file, and set `stage=triage` (`detail=<n> findings waiting in Figma`) if open findings remain, otherwise `stage=idle`.

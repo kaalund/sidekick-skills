@@ -17,7 +17,7 @@ Set up the design memory for a Figma file, then interview the designer to captur
    - Never create a second page or duplicate frames.
 
 3. **Create what is missing**: the page (appended last), and each missing frame named exactly as in the format reference, left to right, vertical auto-layout, padding 24, 80px gaps. Seed these cards if absent:
-   - `memory/index/project`: `intent: unknown`, `phase: unknown`, `last_checkpoint: none`, `workspace_folder: <folderPath>`, `canonical: figma`.
+   - `memory/index/project`: `intent: unknown`, `last_checkpoint: none`, `workspace_folder: <folderPath>`, `canonical: figma`.
    - `memory/index/flows`: a single line `(no flows registered yet)`.
    - `memory/index/status`: a single line `(no flows registered yet)`.
 
@@ -32,14 +32,13 @@ Set up the design memory for a Figma file, then interview the designer to captur
    - constraints (tech, timeline, accessibility or compliance level)
    - platform (web, iOS, Android, desktop)
    - brand and design system
-   - current phase (`explore`, `refine`, `polish`, `handoff`)
    - references
    - known risks and unknowns
    Skip any topic already answered by step 4, including the seed's answers. Ask only about the topics the seed marks `unknown` and the ones it does not cover; if the seed answers everything, go straight to the draft. Keep it a conversation, not a form.
 
 6. **Draft and approve.** Show the drafted brief in chat and ask for approval or edits. Write nothing to Figma before approval.
 
-7. **Write.** Write `memory/brief/file` (file-level keys). The seed's sections map to the brief keys: Purpose and problem to `purpose`, Users and audience to `users`, Goals and success to `goals`, Platform to `platform`, Brand to `brand`, Current phase to `phase`. Scope of this file goes into `constraints` when it names limits, otherwise into `purpose`. Then update `memory/index/project` (a one-line `intent`, the `phase`), and write the open questions. Then append the approved brief to `files/<slug>.md` under a `## Brief` heading, as a plain copy for reading and later export (Figma stays canonical).
+7. **Write.** Write `memory/brief/file` (file-level keys). The seed's sections map to the brief keys: Purpose and problem to `purpose`, Users and audience to `users`, Goals and success to `goals`, Platform to `platform`, Brand to `brand`. Scope of this file goes into `constraints` when it names limits, otherwise into `purpose`. Then update `memory/index/project` (a one-line `intent`), and write the open questions. Then append the approved brief to `files/<slug>.md` under a `## Brief` heading, as a plain copy for reading and later export (Figma stays canonical).
 
 8. **Folder.** `resolve` already registered the file. In the shared design folder there is nothing more to set up: the folder, its git repo and its `.claude/settings.json` already exist (the Sidekick card sets them up).
 

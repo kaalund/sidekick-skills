@@ -41,10 +41,9 @@ Optional keys: `superseded_by: D-012` (set when `status: superseded`), `variant_
 
 `memory/brief/file` and `memory/brief/F-03`.
 
-- File brief keys: `purpose`, `users`, `goals`, `constraints`, `platform`, `brand`, `phase`, `references`, `risks`.
+- File brief keys: `purpose`, `users`, `goals`, `constraints`, `platform`, `brand`, `references`, `risks`.
 - Flow mini-brief keys: `for`, `who`, `done_when`.
 - A skipped answer is the literal `unknown`.
-- `phase` is one of `explore`, `refine`, `polish`, `handoff`.
 
 ### Change log card (`C-###`)
 
@@ -111,7 +110,7 @@ Columns: `id | scope | question | status | opened | closed`. Status is `open` or
 
 ### Index cards
 
-- `memory/index/project`: keys `intent`, `phase`, `last_checkpoint`, `workspace_folder`, `canonical` (`figma` or `repo:<path>`).
+- `memory/index/project`: keys `intent`, `last_checkpoint`, `workspace_folder`, `canonical` (`figma` or `repo:<path>`).
 - `memory/index/flows`: one line per flow, `F-03 | Checkout | section:123:456 | parent:-`. Anchor kind is `page` or `section`. Parent is `-` or another flow id.
 - `memory/index/status`: one line per flow, `F-03 | last_review: cognitive-load 2026-10-10 | next: visual-critique | open_q: 3`.
 
@@ -148,7 +147,7 @@ Allocate immediately before writing by scanning the existing cards in the target
 
 `workspaceFolder` is the shared design folder: one git repo for all Figma files, holding `.claude/settings.json` (the enabled design plugins) and a `files/` folder with `<slug>.state` (the stage line) and `<slug>.md` (the onboarding seed, later a copy of the brief) per Figma file. Every entry has a `slug`; an entry without one is ignored. `kind` is `new`, or `linked-repo` once an export has made a repo copy canonical. The `catalog` array is seeded by `review`. Optional: `findingComponentKey`, the key of the published `Finding` component set.
 
-Seed file `<workspaceFolder>/files/<slug>.md`, written by the Sidekick card before it launches `start`: a `---` header with `fileKey`, `name`, `slug` and `url`, then one `##` section per answer (Purpose and problem, Users and audience, Goals and success, Scope of this file, Platform, Brand, Current phase). `unknown` means the designer skipped the question.
+Seed file `<workspaceFolder>/files/<slug>.md`, written by the Sidekick card before it launches `start`: a `---` header with `fileKey`, `name`, `slug` and `url`, then one `##` section per answer (Purpose and problem, Users and audience, Goals and success, Scope of this file, Platform, Brand). `unknown` means the designer skipped the question.
 
 ## Stage line
 
@@ -161,7 +160,13 @@ flow=F-03 Cart
 stage=triage
 detail=3 findings waiting in Figma
 open=5
-phase=refine
+p1=1
+p2=3
+p3=1
+f1=12:345
+f2=12:346
+f3=12:350
+last=UX critique
 actions=UX critique|/design-memory:review ux;Checkpoint|/design-memory:checkpoint
 ```
 
@@ -169,7 +174,10 @@ actions=UX critique|/design-memory:review ux;Checkpoint|/design-memory:checkpoin
 - `stage`: one of `start`, `review`, `triage`, `fix`, `checkpoint`, `export`, `idle`.
 - `detail`: a short phrase for what is happening right now (max ~40 chars), or empty.
 - `open`: count of findings in scope with status Open, Will do or On hold (from `readFindings`); `0` or empty if unknown.
-- `phase`: `explore`, `refine`, `polish` or `handoff`, copied from the brief's `phase` in `memory/index/project`; empty if unknown. Every skill that writes the file keeps it.
+- `p1`, `p2`, `p3`: the same open findings counted by severity (`P1` critical, `P2` important, `P3` polish), so they add up to `open`. Set them together with `open`; `0` or empty if unknown.
+- `f1`, `f2`, `f3`: the Figma node id of the first open finding of each severity (P1, P2, P3), which the card's severity pills link to: status `Open` only, lowest `FD-` number. Written as `12:345`. Empty when no finding of that severity is open. Set them together with `p1` to `p3`.
+- `last`: the friendly name of the review that ran last (the catalog `name`, e.g. `UX critique`), so the card can say "UX critique done". Only `review` sets it; every other skill that writes the file copies it over.
+- `progress`: `<step>/<total>` while a skill runs a known number of steps (`2/3`), shown as a bar and "step 2 of 3". Empty when nothing is running or the steps are unknown.
 - `actions`: the next-step offers shown as buttons in the Sidekick card, as `label|command` pairs separated by `;` (labels have no `|` or `;`; commands start with `/design-memory:`; at most three; empty while a skill is running). Example: `UX critique|/design-memory:review ux;Checkpoint|/design-memory:checkpoint`.
 
 Stage meanings: `start` setup and brief interview; `review` a critique is being chosen or run; `triage` findings are waiting for the designer to decide (in chat or in Figma); `fix` accepted findings are waiting to be applied in the design; `checkpoint` logging a change; `export` exporting to a repo; `idle` nothing in progress (the line shows everything as passed).
