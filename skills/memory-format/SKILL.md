@@ -94,7 +94,14 @@ Rules:
 - To change a finding, change properties on the instance. Never detach it and never recreate it.
 - **Pruning.** Findings are a working list, not a history. `Dismissed` and `Done` are transient: the designer sets them in Figma (or says them in chat), and the next sync removes those instances (see `review` step 11). Only `Open`, `Will do` and `On hold` persist. What survives is the digest on the change log card and, for dismissals that generalize, a decision.
 - **Placement.** The anchor is the finding's `frame:` scope, or the reviewed frame when the scope is `flow:` or `file`. The instance goes into the frame's parent when that is a page or section, otherwise onto the page, aligned to the frame's left edge. `readFindings`, `updateFinding` and `nextFindingId` scan the instances by name on every page, so moving a finding in Figma is fine.
-- Library import: if the config has `findingComponentKey` (a published component set key), `writeFinding` imports the set from the library instead of using the local one. Existing local instances stay valid.
+- **Finding library.** The `Finding` component set lives in the published `Sidekick` Figma library. Skills only ever import it and make instances; they never build it (the one exception is `build-finding-component`, below). Resolve the key like this, before the first `writeFinding` of a run:
+  1. Use `findingComponentKey` from the config if it is there.
+  2. Otherwise, if `06 Components` already holds a local `Finding` set (older files, or one made by `build-finding-component`), use it: no key, no library check.
+  3. Otherwise call `get_libraries` for the file. If no subscribed library is named `Sidekick`, go to the missing-library steps below.
+  4. Otherwise call `search_design_system` with `{entity: "component", query: "Finding"}` and `includeLibraryKeys: [<Sidekick library key>]`. Take the component set named exactly `Finding`, and save its key in the config as `findingComponentKey` so the lookup happens once.
+  5. Pass the key to `writeFinding` as `libraryKey`. If the import throws, or step 4 finds no `Finding` set, go to the missing-library steps.
+- **Missing library.** Never build the component, and never write a finding without it. Write the state file with `needs=library`, `detail=enable the Sidekick library in Figma`, empty `actions` and `progress`, and copy every other key over. Tell the designer in one or two lines: "The Sidekick library isn't enabled in this file. In Figma, open Assets, then Libraries, and turn on Sidekick. Then press Retry on the card." Stop there. Only when the designer says they cannot enable it (no access, or it is not offered) point them to `/design-memory:build-finding-component`, which builds a local copy after asking them to confirm. Any skill that rewrites the state file once the library resolves leaves `needs` out.
+- Existing local `Finding` sets and instances (from older files) stay valid: `findingSet` falls back to a local set only when it already exists.
 
 **Legacy findings.** Older files may hold findings as one-line text cards (`FD-014 | visual | P2 | frame:12:34 | claim | dismissed | reason | 2026-10-12`, columns `id | skill | severity | scope | claim | status | reason | date`). Keep reading them as a fallback via `readFindings`. Do not rewrite them unless the designer asks; new findings are always instances.
 
@@ -145,7 +152,7 @@ Allocate immediately before writing by scanning the existing cards in the target
 }
 ```
 
-`workspaceFolder` is the shared design folder: one git repo for all Figma files, holding `.claude/settings.json` (the enabled design plugins) and a `files/` folder with `<slug>.state` (the stage line) and `<slug>.md` (the onboarding seed, later a copy of the brief) per Figma file. Every entry has a `slug`; an entry without one is ignored. `kind` is `new`, or `linked-repo` once an export has made a repo copy canonical. The `catalog` array is seeded by `review`. Optional: `findingComponentKey`, the key of the published `Finding` component set.
+`workspaceFolder` is the shared design folder: one git repo for all Figma files, holding `.claude/settings.json` (the enabled design plugins) and a `files/` folder with `<slug>.state` (the stage line) and `<slug>.md` (the onboarding seed, later a copy of the brief) per Figma file. Every entry has a `slug`; an entry without one is ignored. `kind` is `new`, or `linked-repo` once an export has made a repo copy canonical. The `catalog` array is seeded by `review`. Optional: `findingComponentKey`, the key of the published `Finding` component set. Skills fill it in after the first lookup in the `Sidekick` library (see Findings, Finding library).
 
 Seed file `<workspaceFolder>/files/<slug>.md`, written by the Sidekick card before it launches `start`: a `---` header with `fileKey`, `name`, `slug` and `url`, then one `##` section per answer (Purpose and problem, Users and audience, Goals and success, Scope of this file, Platform, Brand). `unknown` means the designer skipped the question.
 
@@ -178,6 +185,7 @@ actions=UX critique|/design-memory:review ux;Checkpoint|/design-memory:checkpoin
 - `f1`, `f2`, `f3`: the Figma node id of the first open finding of each severity (P1, P2, P3), which the card's severity pills link to: status `Open` only, lowest `FD-` number. Written as `12:345`. Empty when no finding of that severity is open. Set them together with `p1` to `p3`.
 - `last`: the friendly name of the review that ran last (the catalog `name`, e.g. `UX critique`), so the card can say "UX critique done". Only `review` sets it; every other skill that writes the file copies it over.
 - `progress`: `<step>/<total>` while a skill runs a known number of steps (`2/3`), shown as a bar and "step 2 of 3". Empty when nothing is running or the steps are unknown.
+- `needs`: `library` when a skill stopped because the `Sidekick` Figma library is not enabled in the file (see Findings, Missing library); the card then asks the designer to enable it. Omit the key otherwise.
 - `actions`: the next-step offers shown as buttons in the Sidekick card, as `label|command` pairs separated by `;` (labels have no `|` or `;`; commands start with `/design-memory:`; at most three; empty while a skill is running). Example: `UX critique|/design-memory:review ux;Checkpoint|/design-memory:checkpoint`.
 
 Stage meanings: `start` setup and brief interview; `review` a critique is being chosen or run; `triage` findings are waiting for the designer to decide (in chat or in Figma); `fix` accepted findings are waiting to be applied in the design; `checkpoint` logging a change; `export` exporting to a repo; `idle` nothing in progress (the line shows everything as passed).
@@ -266,6 +274,7 @@ async function ensureFindingFonts() {
 }
 async function findingSet(page, libraryKey) {
   if (libraryKey) return await figma.importComponentSetByKeyAsync(libraryKey);
+  // Older files only: a set that already exists locally. Never build one here.
   const comps = topicFrame(page, "06 Components");
   return (comps && comps.children.find(n => n.type === "COMPONENT_SET" && n.name === "Finding")) || null;
 }
@@ -365,7 +374,7 @@ async function placeBelow(inst, anchorId) {
 async function writeFinding(page, f, libraryKey, anchorId) {
   await ensureFindingFonts();
   const set = await findingSet(page, libraryKey);
-  if (!set) throw new Error("Finding component set not found; run /start to create it");
+  if (!set) throw new Error("FINDING_LIBRARY_MISSING: the Finding set is not in the Sidekick library or this file; see Missing library");
   const variantName = "Status=" + STATUS_TO_VARIANT[f.status || "open"] + ", Severity=" + f.severity;
   const variant = set.children.find(c => c.name === variantName);
   if (!variant) throw new Error("variant not found: " + variantName);

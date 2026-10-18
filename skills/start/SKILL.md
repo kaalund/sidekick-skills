@@ -21,7 +21,7 @@ Set up the design memory for a Figma file, then interview the designer to captur
    - `memory/index/flows`: a single line `(no flows registered yet)`.
    - `memory/index/status`: a single line `(no flows registered yet)`.
 
-   Also make sure `06 Components` holds the `Finding` component set. If `findingComponentKey` is in the config, skip this and import from the library at write time. Otherwise, if the set is missing, build it (load `figma-use` and the component references) to the contract in `memory-format`: 15 variants (`Status` x `Severity`, named `Status=X, Severity=Y`), each 480 wide and hugging height, with a 4px severity accent bar, severity pill, ID, status pill with dot, claim, reason (visibility bound to `Show reason`), and a footer with Skill, Scope and Date. Add the TEXT and BOOLEAN properties before `combineAsVariants`, link them via `componentPropertyReferences`, and clear fills on the inner layout frames. Colour status and severity clearly (neutral open, blue will do, amber on hold, grey dismissed, green done; red, orange, grey for P1-P3). If a `Finding` set already exists in the file or a linked library, reuse it rather than building a second one.
+   Then resolve the `Finding` library (`memory-format`, Findings, Finding library). Do not build the component set. If the `Sidekick` library is not enabled in the file, follow Missing library: write `needs=library` and stop. Everything above is already in place, so the designer's Retry on the card runs this skill again and carries on from here.
 
 4. **Read before asking.** Call `get_metadata` for the file's pages and sections, call `get_libraries` for linked libraries. If `files/<slug>.md` exists in the folder (the seed from the Sidekick card), read it: every section that is not `unknown` is an answer you already have. Summarize what you found in one line. Do not ask about anything you already know.
 
@@ -42,4 +42,4 @@ Set up the design memory for a Figma file, then interview the designer to captur
 
 8. **Folder.** `resolve` already registered the file. In the shared design folder there is nothing more to set up: the folder, its git repo and its `.claude/settings.json` already exist (the Sidekick card sets them up).
 
-9. End with two lines: what was created, and the suggested next step (run `/review` on a frame). Update the stage line (`memory-format`): `stage=start`, `detail=brief written`. Also set `stage=start`, `detail=brief interview` when you start step 5, and mention once that `/statusline` shows the workflow stage in the status line if they have not set it up.
+9. End with two lines: what was created, and the suggested next step (run `/review` on a frame). Update the stage line (`memory-format`): `stage=start`, `detail=brief written`. Also set `stage=start`, `detail=brief interview` when you start step 5.
