@@ -24,6 +24,6 @@ Work out which Figma file and which local folder this session is about. Keep it 
 
 6. **Moved or deleted folder.** If a registry entry exists but its path is missing on disk, say so and ask: relink to a new path, recreate the folder, or continue without a folder. Never silently create a duplicate folder or registry entry.
 
-7. **Register.** Write `files[<fileKey>]` in the config: `{ "name", "path": <folder>, "slug": <slug>, "kind": "new" }`. Every entry has a `slug`.
+7. **Register.** Write `files[<fileKey>]` in the config: `{ "name", "path": <folder>, "slug": <slug> }`. Every entry has a `slug`.
 
-Return to the calling skill: `fileKey`, `name`, `folderPath` (or none), `slug`, `kind` (`new` or `linked-repo`).
+Return to the calling skill: `fileKey`, `name`, `folderPath` (or none), `slug`.

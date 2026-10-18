@@ -117,7 +117,7 @@ Columns: `id | scope | question | status | opened | closed`. Status is `open` or
 
 ### Index cards
 
-- `memory/index/project`: keys `intent`, `last_checkpoint`, `workspace_folder`, `canonical` (`figma` or `repo:<path>`).
+- `memory/index/project`: keys `intent`, `last_checkpoint`, `workspace_folder`.
 - `memory/index/flows`: one line per flow, `F-03 | Checkout | section:123:456 | parent:-`. Anchor kind is `page` or `section`. Parent is `-` or another flow id.
 - `memory/index/status`: one line per flow, `F-03 | last_review: cognitive-load 2026-10-10 | next: visual-critique | open_q: 3`.
 
@@ -146,13 +146,13 @@ Allocate immediately before writing by scanning the existing cards in the target
   "version": 1,
   "workspaceFolder": "/Users/peter/design-workspace",
   "files": {
-    "FIGMAFILEKEY": { "name": "Checkout redesign", "path": "/Users/peter/design-workspace", "slug": "checkout-redesign", "kind": "new" }
+    "FIGMAFILEKEY": { "name": "Checkout redesign", "path": "/Users/peter/design-workspace", "slug": "checkout-redesign" }
   },
   "catalog": []
 }
 ```
 
-`workspaceFolder` is the shared design folder: one git repo for all Figma files, holding `.claude/settings.json` (the enabled design plugins) and a `files/` folder with `<slug>.state` (the stage line) and `<slug>.md` (the onboarding seed, later a copy of the brief) per Figma file. Every entry has a `slug`; an entry without one is ignored. `kind` is `new`, or `linked-repo` once an export has made a repo copy canonical. The `catalog` array is seeded by `review`. Optional: `findingComponentKey`, the key of the published `Finding` component set. Skills fill it in after the first lookup in the `Sidekick` library (see Findings, Finding library).
+`workspaceFolder` is the shared design folder: one git repo for all Figma files, holding `.claude/settings.json` (the enabled design plugins) and a `files/` folder with `<slug>.state` (the stage line) and `<slug>.md` (the onboarding seed, later a copy of the brief) per Figma file. Every entry has a `slug`; an entry without one is ignored. The `catalog` array is seeded by `review`. Optional: `findingComponentKey`, the key of the published `Finding` component set. Skills fill it in after the first lookup in the `Sidekick` library (see Findings, Finding library).
 
 Seed file `<workspaceFolder>/files/<slug>.md`, written by the Sidekick card before it launches `start`: a `---` header with `fileKey`, `name`, `slug` and `url`, then one `##` section per answer (Purpose and problem, Users and audience, Goals and success, Scope of this file, Platform, Brand). `unknown` means the designer skipped the question.
 
@@ -178,7 +178,7 @@ actions=UX critique|/design-memory:review ux;Checkpoint|/design-memory:checkpoin
 ```
 
 - `flow`: the flow in scope as `<id> <name>`, or empty.
-- `stage`: one of `start`, `review`, `triage`, `fix`, `checkpoint`, `export`, `idle`.
+- `stage`: one of `start`, `review`, `triage`, `fix`, `checkpoint`, `idle`.
 - `detail`: a short phrase for what is happening right now (max ~40 chars), or empty.
 - `open`: count of findings in scope with status Open, Will do or On hold (from `readFindings`); `0` or empty if unknown.
 - `p1`, `p2`, `p3`: the same open findings counted by severity (`P1` critical, `P2` important, `P3` polish), so they add up to `open`. Set them together with `open`; `0` or empty if unknown.
@@ -188,7 +188,7 @@ actions=UX critique|/design-memory:review ux;Checkpoint|/design-memory:checkpoin
 - `needs`: `library` when a skill stopped because the `Sidekick` Figma library is not enabled in the file (see Findings, Missing library); the card then asks the designer to enable it. Omit the key otherwise.
 - `actions`: the next-step offers shown as buttons in the Sidekick card, as `label|command` pairs separated by `;` (labels have no `|` or `;`; commands start with `/design-memory:`; at most three; empty while a skill is running). Example: `UX critique|/design-memory:review ux;Checkpoint|/design-memory:checkpoint`.
 
-Stage meanings: `start` setup and brief interview; `review` a critique is being chosen or run; `triage` findings are waiting for the designer to decide (in chat or in Figma); `fix` accepted findings are waiting to be applied in the design; `checkpoint` logging a change; `export` exporting to a repo; `idle` nothing in progress (the line shows everything as passed).
+Stage meanings: `start` setup and brief interview; `review` a critique is being chosen or run; `triage` findings are waiting for the designer to decide (in chat or in Figma); `fix` accepted findings are waiting to be applied in the design; `checkpoint` logging a change; `idle` nothing in progress (the line shows everything as passed).
 
 ## Figma access
 
