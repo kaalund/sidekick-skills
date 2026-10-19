@@ -5,11 +5,11 @@ A Claude Code plugin that gives a Figma file a memory: brief, decisions, change 
 ## Install
 
 ```
-/plugin marketplace add /Users/peter/dev/sidekick
+/plugin marketplace add kaalund/sidekick-skills
 /plugin install design-memory@sidekick
 ```
 
-Choose user scope so it works from any directory. For development you can instead start Claude Code with `claude --plugin-dir /Users/peter/dev/sidekick/plugins/design-memory`. The Sidekick app does this for you: its Set up button adds the marketplace and enables the plugin in the shared design folder.
+Choose user scope so it works from any directory. For development you can instead start Claude Code with `claude --plugin-dir <path to this folder>`. The Sidekick app does this for you: its Set up button adds the marketplace and enables the plugin in the shared design folder.
 
 ## Commands
 

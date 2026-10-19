@@ -1,0 +1,11 @@
+{
+  "name": "sidekick",
+  "owner": { "name": "Peter" },
+  "plugins": [
+    {
+      "name": "design-memory",
+      "source": "./",
+      "description": "Design memory layer for Figma"
+    }
+  ]
+}
