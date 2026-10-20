@@ -12,7 +12,7 @@ Set up the design memory for a Figma file, then interview the designer to captur
 1. Load `resolve` and resolve the file and folder. Load `memory-format` and `figma-use`.
 
 2. **Detect existing memory** with `use_figma`: does the page `🤖 Agentic Memory` (or the legacy `Memory (agent-maintained)`) exist, and which of the seven frames exist?
-   - Page and all frames exist: say it is already set up and offer only a brief re-interview (step 5 onwards).
+   - Page and all frames exist: say it is already set up and create nothing, but still run the rest of step 3 (the library check) and step 4, then offer only a brief re-interview (step 5 onwards). A Retry after `needs=library` and a restarted onboarding both land here.
    - Page exists but some frames are missing: create only the missing frames and say which.
    - Never create a second page or duplicate frames.
 
@@ -21,9 +21,9 @@ Set up the design memory for a Figma file, then interview the designer to captur
    - `memory/index/flows`: a single line `(no flows registered yet)`.
    - `memory/index/status`: a single line `(no flows registered yet)`.
 
-   Then resolve the `Finding` library (`memory-format`, Findings, Finding library). Do not build the component set. If the `Sidekick` library is not enabled in the file, follow Missing library: write `needs=library` and stop. Everything above is already in place, so the designer's Retry on the card runs this skill again and carries on from here.
+   Then resolve the `Finding` library (`memory-format`, Findings, Finding library). Do not build the component set. If the `Sidekick` library is not enabled in the file, follow Missing library: write `stage=start` and `needs=library` (the line is ignored without a stage) and stop. Everything above is already in place, so the designer's Retry on the card runs this skill again and carries on from here.
 
-4. **Read before asking.** Call `get_metadata` for the file's pages and sections, call `get_libraries` for linked libraries. If the seed from the Sidekick card exists (`~/Library/Application Support/Sidekick/seeds/<slug>.md`, the one `resolve` found), read it: every section that is not `unknown` is an answer you already have. Summarize what you found in one line. Do not ask about anything you already know. Then update the stage line (`memory-format`): `stage=start`, `detail=brief interview`. Do this here, whether or not you still have questions: the page, the frames and the library are in place, and this write is what tells the Sidekick card it is now safe to switch to auto mode. Never write it before step 3 has finished, and never when step 3 stopped on `needs=library`.
+4. **Read before asking.** Call `get_metadata` for the file's pages and sections, call `get_libraries` for linked libraries. If the seed from the Sidekick card exists (`~/Library/Application Support/Sidekick/seeds/<slug>.md`, the one `resolve` found), read it with the Read tool, never with shell `cat` or other shell reads (the auto-mode safety check blocks those outside the folder): every section that is not `unknown` is an answer you already have. Summarize what you found in one line. Do not ask about anything you already know. Then update the stage line (`memory-format`): `stage=start`, `detail=brief interview`. Do this here, whether or not you still have questions: the page, the frames and the library are in place, and this write is what tells the Sidekick card it is now safe to switch to auto mode. Never write it before step 3 has finished, and never when step 3 stopped on `needs=library`.
 
 5. **Interview.** One question at a time, adaptive and skippable. "Don't know yet" is a valid answer: record `unknown` and add a `Q-###` entry in `05 Open questions` for it. Cover:
    - purpose and the problem being solved
