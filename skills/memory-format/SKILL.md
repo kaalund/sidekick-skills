@@ -188,7 +188,7 @@ actions=UX critique|/design-memory:review ux;Checkpoint|/design-memory:checkpoin
 - `needs`: `library` when a skill stopped because the `Sidekick` Figma library is not enabled in the file (see Findings, Missing library); the card then asks the designer to enable it. Omit the key otherwise.
 - `actions`: the next-step offers shown as buttons in the Sidekick card, as `label|command` pairs separated by `;` (labels have no `|` or `;`; commands start with `/design-memory:`; at most three; empty while a skill is running). Example: `UX critique|/design-memory:review ux;Checkpoint|/design-memory:checkpoint`.
 
-Stage meanings: `start` setup and brief interview; `review` a critique is being chosen or run; `triage` findings are waiting for the designer to decide (in chat or in Figma); `fix` accepted findings are waiting to be applied in the design; `checkpoint` logging a change; `idle` nothing in progress (the line shows everything as passed).
+Stage meanings: `start` setup and brief interview (`detail=brief interview` means setup is done and the library is present; the Sidekick card uses it to say the designer can switch to auto mode, so only `start` writes it, and only after the library check passed); `review` a critique is being chosen or run; `triage` findings are waiting for the designer to decide (in chat or in Figma); `fix` accepted findings are waiting to be applied in the design; `checkpoint` logging a change; `idle` nothing in progress (the line shows everything as passed).
 
 ## Figma access
 
