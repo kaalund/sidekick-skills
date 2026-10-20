@@ -17,7 +17,7 @@ Frames use vertical auto-layout, padding 24, 80px gaps between frames. `06 Compo
 
 ## Cards
 
-A card is a single text node placed directly inside a topic frame, named `memory/<topic>/<ID>` (for example `memory/decisions/D-007`). Findings are the exception: they are component instances with the same naming, placed under the frame they are about (see below). The text body is lines of `key: value`. Continuation lines for a long value start with two spaces. Parse by splitting each line on the first `: `. Cards use Inter Regular 12, width 480, so they stack.
+A card is a single text node placed directly inside a topic frame, named `memory/<topic>/<ID>` (for example `memory/decisions/D-007`). Findings are the exception: they are component instances with the same naming, placed in a findings frame under the frame they are about (see below). The text body is lines of `key: value`. Continuation lines for a long value start with two spaces. Parse by splitting each line on the first `: `. Cards use Inter Regular 12, width 480, so they stack.
 
 Topic names in card names: `index`, `brief`, `decisions`, `changelog`, `findings`, `questions`.
 
@@ -64,7 +64,7 @@ The structural fingerprint does not live on `C-` cards (it is machine state, not
 
 ### Findings (`FD-###`): `Finding` component instances
 
-A finding is an instance of the `Finding` component set, named `memory/findings/FD-###` and placed on the design page directly below the frame it is about, not on the Memory page. Several findings for one frame stack downward with a 16px gap. `04 Findings` stays on the Memory page but now only holds legacy text-card findings. The designer changes status in the Figma properties panel; agents read and write the same properties.
+A finding is an instance of the `Finding` component set, named `memory/findings/FD-###` and placed on the design page, not on the Memory page, inside the findings frame of the frame it is about. That frame is a vertical auto-layout frame named `<frame name> - Sidekick Findings 🤖` (16px gap, no padding, no fill) that sits directly below the frame it is about. The first finding about a frame creates it, and every later finding about the same frame is added to it. `04 Findings` stays on the Memory page but now only holds legacy text-card findings. The designer changes status in the Figma properties panel; agents read and write the same properties.
 
 Component set `Finding` (in `06 Components`), variant properties:
 
@@ -92,8 +92,8 @@ Rules:
 - `Reason` is empty when `Show reason` is false. Set `Show reason` to true whenever a reason is written; if the designer toggles it on and fills `Reason` in Figma, that counts as the reason.
 - Property keys carry a suffix (`ID#3997:105`). Read them by stripping `/#.*$/`; variant properties are keyed by plain name.
 - To change a finding, change properties on the instance. Never detach it and never recreate it.
-- **Pruning.** Findings are a working list, not a history. `Dismissed` and `Done` are transient: the designer sets them in Figma (or says them in chat), and the next sync removes those instances (see `review` step 11). Only `Open`, `Will do` and `On hold` persist. What survives is the digest on the change log card and, for dismissals that generalize, a decision.
-- **Placement.** The anchor is the finding's `frame:` scope, or the reviewed frame when the scope is `flow:` or `file`. The instance goes into the frame's parent when that is a page or section, otherwise onto the page, aligned to the frame's left edge. `readFindings`, `updateFinding` and `nextFindingId` scan the instances by name on every page, so moving a finding in Figma is fine.
+- **Pruning.** Findings are a working list, not a history. `Dismissed` and `Done` are transient: the designer sets them in Figma (or says them in chat), and the next sync removes those instances (see `review` step 11) with `removeFinding`, which also removes a findings frame that is left empty. Only `Open`, `Will do` and `On hold` persist. What survives is the digest on the change log card and, for dismissals that generalize, a decision.
+- **Placement.** The anchor is the finding's `frame:` scope, or the reviewed frame when the scope is `flow:` or `file`. The findings frame goes into the anchor's parent when that is a page or section, otherwise onto the page, aligned to the anchor's left edge and 16px below it. `writeFinding` finds it by its exact name among that parent's children and creates it when it is missing, so never rename it, and never make a second one for the same frame. If the anchor frame is renamed, the next finding starts a new findings frame and the old one keeps its findings. Findings written by older versions sit loose below their frame; leave them where they are (they are still read and updated like the others). `readFindings`, `updateFinding` and `nextFindingId` scan the instances by name on every page, so moving a finding in Figma is fine.
 - **Finding library.** The `Finding` component set lives in the published `Sidekick` Figma library. Skills only ever import it and make instances; they never build it (the one exception is `build-finding-component`, below). Resolve the key like this, before the first `writeFinding` of a run:
   1. Use `findingComponentKey` from the config if it is there.
   2. Otherwise, if `06 Components` already holds a local `Finding` set (older files, or one made by `build-finding-component`), use it: no key, no library check.
@@ -195,7 +195,7 @@ Stage meanings: `start` setup and brief interview; `review` a critique is being 
 - Load the `figma-use` skill before every `use_figma` call.
 - Do not use `setPluginData`, `createImageAsync` or `loadAllPagesAsync`; they are unsupported.
 - Switch pages with `await figma.setCurrentPageAsync(page)` before reading or writing its nodes.
-- Memory is only ever visible nodes: cards on the Memory page, and finding instances below the frames they are about.
+- Memory is only ever visible nodes: cards on the Memory page, and finding instances in the findings frames below the frames they are about.
 
 ## Figma helpers
 
@@ -261,7 +261,7 @@ async function updateCard(frame, name, body) {
 }
 ```
 
-Finding helpers (instances). Findings are read with `readFindings()`, written with `writeFinding(page, f, libraryKey, anchorId)`, changed with `updateFinding(id, patch)`, and numbered with `nextFindingId()`. They scan every page, and `writeFinding` positions the instance below `anchorId` (a frame node id). Because they switch pages, call `await figma.setCurrentPageAsync(...)` again afterwards before touching other nodes. Prepend `const FILE_KEY = "<fileKey>";` before the block (used for links). Status values are the card statuses (`open`, `accepted`, ...), mapped to variants internally. `writeFinding` takes `f.scope` in normal syntax (`frame:3962:13783`) and shows the frame name as a link. Patch keys for `updateFinding`: `status`, `severity`, `claim`, `reason`, `scope`, `skill`, `date`.
+Finding helpers (instances). Findings are read with `readFindings()`, written with `writeFinding(page, f, libraryKey, anchorId)`, changed with `updateFinding(id, patch)`, and numbered with `nextFindingId()`. They scan every page, and `writeFinding` adds the instance to the findings frame of `anchorId` (a frame node id), creating that frame under the anchor when it doesn't exist. Remove a finding with `removeFinding(id)`, never with a bare `node.remove()`. Because they switch pages, call `await figma.setCurrentPageAsync(...)` again afterwards before touching other nodes. Prepend `const FILE_KEY = "<fileKey>";` before the block (used for links). Status values are the card statuses (`open`, `accepted`, ...), mapped to variants internally. `writeFinding` takes `f.scope` in normal syntax (`frame:3962:13783`) and shows the frame name as a link. Patch keys for `updateFinding`: `status`, `severity`, `claim`, `reason`, `scope`, `skill`, `date`.
 
 ```js
 const STATUS_TO_VARIANT = { open: "Open", accepted: "Will do", deferred: "On hold", dismissed: "Dismissed", landed: "Done" };
@@ -355,21 +355,40 @@ async function nextFindingId() {
     .filter(n => !Number.isNaN(n));
   return "FD-" + String((nums.length ? Math.max(...nums) : 0) + 1).padStart(3, "0");
 }
-// Put the instance below the anchor frame, under any findings already stacked there.
-async function placeBelow(inst, anchorId) {
+// Add the instance to the anchor's findings frame, creating the frame below the anchor the first time.
+async function placeInFindingsFrame(inst, anchorId) {
   const anchor = await figma.getNodeByIdAsync(anchorId);
   if (!anchor || !anchor.absoluteBoundingBox) throw new Error("anchor frame not found: " + anchorId);
   const parent = anchor.parent && (anchor.parent.type === "SECTION" || anchor.parent.type === "PAGE") ? anchor.parent : figma.currentPage;
-  parent.appendChild(inst);
-  const bb = anchor.absoluteBoundingBox;
-  const origin = parent.type === "SECTION" ? { x: parent.absoluteBoundingBox.x, y: parent.absoluteBoundingBox.y } : { x: 0, y: 0 };
-  const x = bb.x - origin.x;
-  let y = bb.y - origin.y + bb.height + 16;
-  const stacked = parent.children
-    .filter(n => n !== inst && n.name.startsWith("memory/findings/") && Math.abs(n.x - x) < 1 && n.y >= y - 1)
-    .sort((a, b) => a.y - b.y);
-  for (const n of stacked) if (n.y <= y + 1) y = n.y + n.height + 16;
-  inst.x = x; inst.y = y;
+  const name = anchor.name + " - Sidekick Findings 🤖";
+  let frame = parent.children.find(n => n.type === "FRAME" && n.name === name);
+  if (!frame) {
+    frame = figma.createAutoLayout("VERTICAL");
+    frame.name = name;
+    frame.itemSpacing = 16;
+    frame.paddingLeft = frame.paddingRight = frame.paddingTop = frame.paddingBottom = 0;
+    frame.fills = [];
+    parent.appendChild(frame);
+    const bb = anchor.absoluteBoundingBox;
+    const origin = parent.type === "SECTION" ? { x: parent.absoluteBoundingBox.x, y: parent.absoluteBoundingBox.y } : { x: 0, y: 0 };
+    const x = bb.x - origin.x;
+    let y = bb.y - origin.y + bb.height + 16;
+    // Older findings stacked loose below the anchor: start under them.
+    const loose = parent.children
+      .filter(n => n !== frame && n.name.startsWith("memory/findings/") && Math.abs(n.x - x) < 1 && n.y >= y - 1)
+      .sort((a, b) => a.y - b.y);
+    for (const n of loose) if (n.y <= y + 1) y = n.y + n.height + 16;
+    frame.x = x; frame.y = y;
+  }
+  frame.appendChild(inst);
+}
+// Remove a finding, and its findings frame when that is left empty.
+async function removeFinding(id) {
+  const inst = (await allFindingNodes()).find(n => n.name === "memory/findings/" + id);
+  if (!inst) throw new Error("finding not found: " + id);
+  const frame = inst.parent;
+  inst.remove();
+  if (frame && frame.type === "FRAME" && frame.name.endsWith(" - Sidekick Findings 🤖") && frame.children.length === 0) frame.remove();
 }
 async function writeFinding(page, f, libraryKey, anchorId) {
   await ensureFindingFonts();
@@ -390,7 +409,7 @@ async function writeFinding(page, f, libraryKey, anchorId) {
   inst.setProperties(props);
   await applyFindingLinks(inst, f.scope);
   inst.name = "memory/findings/" + f.id;
-  await placeBelow(inst, anchorId);
+  await placeInFindingsFrame(inst, anchorId);
   return inst.id;
 }
 async function updateFinding(id, patch) {
@@ -414,4 +433,4 @@ async function updateFinding(id, patch) {
 }
 ```
 
-Do not delete decision, change log, brief, index or question cards. Supersede or resolve them by updating the card text. The only things that are removed are `Dismissed` and `Done` finding instances, by the pruning rule above (`node.remove()` on those instances after the digest is written).
+Do not delete decision, change log, brief, index or question cards. Supersede or resolve them by updating the card text. The only things that are removed are `Dismissed` and `Done` finding instances, by the pruning rule above (`removeFinding` on those instances after the digest is written).
