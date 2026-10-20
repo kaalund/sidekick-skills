@@ -23,7 +23,7 @@ Set up the design memory for a Figma file, then interview the designer to captur
 
    Then resolve the `Finding` library (`memory-format`, Findings, Finding library). Do not build the component set. If the `Sidekick` library is not enabled in the file, follow Missing library: write `needs=library` and stop. Everything above is already in place, so the designer's Retry on the card runs this skill again and carries on from here.
 
-4. **Read before asking.** Call `get_metadata` for the file's pages and sections, call `get_libraries` for linked libraries. If `files/<slug>.md` exists in the folder (the seed from the Sidekick card), read it: every section that is not `unknown` is an answer you already have. Summarize what you found in one line. Do not ask about anything you already know.
+4. **Read before asking.** Call `get_metadata` for the file's pages and sections, call `get_libraries` for linked libraries. If the seed from the Sidekick card exists (`~/Library/Application Support/Sidekick/seeds/<slug>.md`, the one `resolve` found), read it: every section that is not `unknown` is an answer you already have. Summarize what you found in one line. Do not ask about anything you already know.
 
 5. **Interview.** One question at a time, adaptive and skippable. "Don't know yet" is a valid answer: record `unknown` and add a `Q-###` entry in `05 Open questions` for it. Cover:
    - purpose and the problem being solved
@@ -38,7 +38,7 @@ Set up the design memory for a Figma file, then interview the designer to captur
 
 6. **Draft and approve.** Show the drafted brief in chat and ask for approval or edits. Write nothing to Figma before approval.
 
-7. **Write.** Write `memory/brief/file` (file-level keys). The seed's sections map to the brief keys: Purpose and problem to `purpose`, Users and audience to `users`, Goals and success to `goals`, Platform to `platform`, Brand to `brand`. Scope of this file goes into `constraints` when it names limits, otherwise into `purpose`. Then update `memory/index/project` (a one-line `intent`), and write the open questions. Then append the approved brief to `files/<slug>.md` under a `## Brief` heading, as a plain copy for reading (Figma stays the source of truth).
+7. **Write.** Write `memory/brief/file` (file-level keys). The seed's sections map to the brief keys: Purpose and problem to `purpose`, Users and audience to `users`, Goals and success to `goals`, Platform to `platform`, Brand to `brand`. Scope of this file goes into `constraints` when it names limits, otherwise into `purpose`. Then update `memory/index/project` (a one-line `intent`), and write the open questions. Do not copy the brief to disk: Figma is the only copy, so teammates see it. Do not delete the seed either, Sidekick removes it once the stage line says `brief written`.
 
 8. **Folder.** `resolve` already registered the file. In the shared design folder there is nothing more to set up: the folder, its git repo and its `.claude/settings.json` already exist (the Sidekick card sets them up).
 
