@@ -26,7 +26,7 @@ Topic names in card names: `index`, `brief`, `decisions`, `changelog`, `findings
 ```
 id: D-007
 title: Use inline validation on the payment form
-status: active
+status: active          # active | inferred | superseded
 scope: flow:F-03
 date: 2026-10-12
 context: Guest payment form had a long error list on submit.
@@ -58,9 +58,9 @@ nodes: 12:34 "Payment"
 
 Optional key `dismissed:`: one line of short topics for findings dismissed in a triage, each with a brief reason in parentheses when given or the decision id if promoted (`dismissed: Egenkapital focus states (Eufemia, D-001); touch targets under 44px`). It exists so later reviews do not re-raise them; keep it to topics, not ticket history.
 
-Write a `C-` card only when something happened: a design change, a dismissal, or a finding that landed. A checkpoint with nothing to report writes no card; it only updates `last_checkpoint` in the index. Never write a card whose `changed` is just "no design changes".
+Write a `C-` card only when something happened: a design change, a dismissal, or a finding that landed. A catch-up with nothing to report writes no card; it only updates `last_checkpoint` in the index. Never write a card whose `changed` is just "no design changes".
 
-The structural fingerprint does not live on `C-` cards (it is machine state, not history). It lives in one place, `memory/index/fingerprint`. Older `C-` cards may still carry a `fingerprint:` line; treat the newest one as a fallback if the index card does not exist yet.
+The structural fingerprint does not live on `C-` cards (it is machine state, not history). It lives in the local cache (see Local cache). Older files may still have a `memory/index/fingerprint` card, and older `C-` cards a `fingerprint:` line; read the newest of those only as a fallback when the cache has no fingerprint for the flow, and never write them again.
 
 ### Findings (`FD-###`): `Finding` component instances
 
@@ -121,9 +121,9 @@ Columns: `id | scope | question | status | opened | closed`. Status is `open` or
 - `memory/index/flows`: one line per flow, `F-03 | Checkout | section:123:456 | parent:-`. Anchor kind is `page` or `section`. Parent is `-` or another flow id.
 - `memory/index/status`: one line per flow, `F-03 | last_review: cognitive-load 2026-10-10 | next: visual-critique | open_q: 3`.
 
-- `memory/index/fingerprint`: machine state, one line per flow: `F-03 | 12:34|Payment|7|390x844 ; 12:40|Order summary|5|390x600`. The part after the flow id is a compact structural summary of the frames in scope, `nodeId|name|childCount|WxH` joined by ` ; `. The next checkpoint diffs against it because snapshots are not stored. It is the last card in `00 Index`, in a muted grey, and the designer is never asked about it. Only the latest value is kept; overwrite, never append. It cannot see visual edits (spacing, colour, text), so it is evidence, not proof.
+- `memory/index/fingerprint` (legacy, read only): older files keep the structural fingerprint here, one line per flow (`F-03 | 12:34|Payment|7|390x844 ; ...`). New fingerprints go to the local cache. Leave the card where it is; `digest` reads it once as a fallback.
 
-`flows`, `status` and `fingerprint` are single text nodes holding many lines, so they are updated by rewriting the node's full text.
+`flows` and `status` are single text nodes holding many lines, so they are updated by rewriting the node's full text.
 
 ## Scope syntax
 
@@ -156,6 +156,74 @@ Allocate immediately before writing by scanning the existing cards in the target
 
 Seed file `~/Library/Application Support/Sidekick/seeds/<slug>.md`, written by the Sidekick card (in its own support folder, not the design folder) before it launches `start`, and deleted by Sidekick once the stage line says `brief written`: a `---` header with `fileKey`, `name`, `slug` and `url`, then one `##` section per answer (Purpose and problem, Users and audience, Goals and success, Scope of this file, Platform, Brand). `unknown` means the designer skipped the question. Skills only read it, and only by its exact path.
 
+## Inferred content
+
+Skills work silently: they do not ask the designer to confirm a guess. Anything a skill guessed rather than saw or was told is marked:
+- a `why:` on a `C-` card ends in `(inferred)`;
+- a decision the designer did not state has `status: inferred`;
+- a finding a skill set to `Done` because the design looks fixed gets `Reason: Looks fixed (inferred, <date>)` with `Show reason` on.
+
+What changed on the canvas is evidence and is not marked. Text the designer wrote (a `Reason` on a finding, an edited card, a reply in chat) always wins over an inferred value: overwrite the inferred one and drop the marker. A designer who turns an inferred decision into `active` or deletes it is never asked why.
+
+## Local cache
+
+Machine state that can be rebuilt from the Figma file at any time. It lives in the shared design folder next to the state file, is never shown on the Memory page, and is per machine: two designers on one file each build their own. Only `digest` writes it; other skills read it.
+
+```
+<folderPath>/files/
+├── <slug>.state                 stage line (the Sidekick card reads it)
+└── <slug>/
+    ├── fingerprint              one line per flow, same format as the legacy index card
+    ├── flows/F-01.md            one file per flow
+    ├── screens/2002-1196.md     one file per described frame, named by node id with ':' as '-'
+    └── parked.md                minor findings held back until polish
+```
+
+Write the files with the Write tool and read them with the Read tool, never with shell commands. Create folders as needed. If a cache file is missing or unreadable, treat it as empty: the next `digest` rebuilds it.
+
+**Fingerprint line:** `F-03 | 12:34|Payment|7|390x844 ; 12:40|Order summary|5|390x600`, each frame as `nodeId|name|childCount|WxH`. Only the latest value per flow is kept.
+
+**Screen description** (`screens/<id>.md`), plain `key: value` lines:
+
+```
+id: 2002:1196
+name: image 3
+flow: F-01
+described: 2026-11-04
+fingerprint: 2002:1196|image 3|0|1135x895
+relation: edit                 # new | edit | variant of <id> | state of <id>
+fidelity: screenshot; real copy; some placeholders
+purpose: attach a receipt and classify the expense
+primary_action: "Legg til i regnskap", outlined button below the form
+elements: transaction header (COOP Obs!, -1 874,00 NOK); upload box (PDF, JPG, PNG); Kategori field; Leverandør; MVA
+copy: "Hva betaler du for?" (Kategori hint)
+findings: FD-006, FD-009, FD-014
+changes: primary action now filled; upload box replaced by a drop zone   # since the previous description, empty on the first
+```
+
+Keep a description under about 25 lines. Describe what a designer would notice, not every layer.
+
+**Flow description** (`flows/F-01.md`):
+
+```
+id: F-01
+name: Prototype flow
+anchor: section:2044:13149
+purpose: <from the flow mini-brief, or unknown>
+stage: explore                 # explore | refine | polish (inferred)
+stage_evidence: screenshots, placeholder amounts, no error states
+screens: 2002:1190 image 1; 2002:1193 image 2; 2002:1196 image 3
+variants: 2050:10 variant of 2002:1196
+states: 2050:22 state of 2002:1199
+updated: 2026-11-04
+```
+
+**Relations.** Identity is the Figma node id. A frame with an id seen before is the same screen (`edit` when its fingerprint or appearance changed). A new id is classified, in this order: a `state of` a sibling when it is nearly identical and one object differs (a toggle, an expanded row, an error shown); a `variant of` a screen when it covers the same step with a different layout or concept and sits next to it; otherwise `new`. A new id in a section that is not a registered flow belongs to a new flow (see `context`).
+
+**Stage.** Inferred per flow from fidelity: `explore` when the frames are mostly screenshots or rough shapes, copy or numbers are placeholders, or key states are missing; `polish` when frames use components, copy is real and the main states exist; `refine` in between. A stage the designer stated (in the brief, the flow mini-brief or chat) wins over the inferred one.
+
+**Parked findings** (`parked.md`), one line each, same columns as legacy findings: `P-007 | content | P3 | frame:2002:1196 | claim | parked | reason | 2026-11-04`. They are not `FD-` findings and never appear in Figma until `review` brings them back (see `review`, Filter).
+
 ## Stage line
 
 The Sidekick card shows where the designer is in the workflow. It reads a plain-text state file that skills keep up to date. Updating it is cosmetic: never ask permission, never mention it, and ignore any write failure.
@@ -174,7 +242,7 @@ f1=12:345
 f2=12:346
 f3=12:350
 last=UX critique
-actions=UX critique|/design-memory:review ux;Checkpoint|/design-memory:checkpoint
+actions=UX critique|/design-memory:review ux;Visual critique|/design-memory:review visual
 ```
 
 - `flow`: the flow in scope as `<id> <name>`, or empty.
@@ -190,7 +258,7 @@ actions=UX critique|/design-memory:review ux;Checkpoint|/design-memory:checkpoin
 
 Every write replaces the whole file, so read the existing one first and carry over every key you are not changing: `flow`, `open`, `p1` to `p3`, `f1` to `f3`, `last`, and `actions` unless you are offering new ones. This holds for `start` too (a re-run on a file that already has findings must not wipe their counts). Only `progress` and `needs` are dropped, as described above, when the skill is no longer running or the library resolved.
 
-Stage meanings: `start` setup and brief interview (`detail=brief interview` means setup is done and the library is present; the Sidekick card uses it to say the designer can switch to auto mode, so only `start` writes it, and only after the library check passed); `review` a critique is being chosen or run; `triage` findings are waiting for the designer to decide (in chat or in Figma); `fix` accepted findings are waiting to be applied in the design; `checkpoint` logging a change; `idle` nothing in progress (the line shows everything as passed).
+Stage meanings: `start` setup and brief interview (`detail=brief interview` means setup is done and the library is present; the Sidekick card uses it to say the designer can switch to auto mode, so only `start` writes it, and only after the library check passed); `review` a critique is being chosen or run; `triage` findings are waiting for the designer to decide (in chat or in Figma); `fix` accepted findings are waiting to be applied in the design; `checkpoint` catching up the memory without a critique (digest, change log, pruning); `idle` nothing in progress (the line shows everything as passed).
 
 ## Figma access
 

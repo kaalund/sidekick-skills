@@ -1,6 +1,6 @@
 # design-memory
 
-A Claude Code plugin that gives a Figma file a memory: brief, decisions, change log, critique findings and open questions, all kept as visible nodes on a `🤖 Agentic Memory` page. Findings are instances of a `Finding` component (in `06 Components`) placed directly below the frame they are about, not on the Memory page, with a Status variant (Open, Will do, On hold, Dismissed, Done), so you can triage in Figma at any time and the agent reads it back. The AI drafts and logs; the designer approves.
+A Claude Code plugin that gives a Figma file a memory: brief, decisions, change log, critique findings and open questions, all kept as visible nodes on a `🤖 Agentic Memory` page. Findings are instances of a `Finding` component (in `06 Components`) placed directly below the frame they are about, not on the Memory page, with a Status variant (Open, Will do, On hold, Dismissed, Done), so you can triage in Figma at any time and the agent reads it back. The agent works silently: it looks at what changed, logs it, marks its guesses as inferred, and asks only what a new flow is for.
 
 ## Install
 
@@ -14,14 +14,15 @@ Choose user scope so it works from any directory. For development you can instea
 ## Commands
 
 - `/start` sets up the Memory page, interviews you for the project brief, and registers the file in the shared design folder.
-- `/review` suggests the next critique skill for a frame or flow, runs it with scoped memory, and asks for a quick triage.
-- `/checkpoint` logs a meaningful change and checks whether accepted findings landed.
+- `/review` looks at what changed since last time, catches the memory up, picks the critique that fits the flow's stage and runs it with scoped memory. Findings land on the canvas for triage in Figma; minor ones are parked during exploration.
+- `/checkpoint` (Catch up on the card) brings the memory up to date without a critique: digest, change log, findings that look fixed.
+
 The skills keep a small state file (`files/<slug>.state` in the shared design folder) up to date; the Sidekick card reads it to show your stage and next options.
 
-Internal skills: `memory-format` (the contract), `resolve` (file and folder lookup), `context` (scope and flow registration).
+Internal skills: `memory-format` (the contract), `resolve` (file and folder lookup), `context` (scope and flow registration), `digest` (screen descriptions in the local cache `files/<slug>/`, what changed, the flow's stage).
 
 ## Where things live
 
 - Memory: the Figma file.
 - The file registry and the review catalog: `.design-memory/config.json` in the shared design folder.
-- One shared design folder for all files: `.claude/settings.json` (the enabled plugins) and a `files/` folder with `<slug>.state` per Figma file.
+- One shared design folder for all files: `.claude/settings.json` (the enabled plugins) and a `files/` folder with `<slug>.state` per Figma file, plus a rebuildable local cache in `files/<slug>/` (screen descriptions, fingerprints, parked findings).

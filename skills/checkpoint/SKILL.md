@@ -1,35 +1,25 @@
 ---
 name: checkpoint
-description: Check in after a meaningful design change. Compares the current frames to the last checkpoint, drafts change log and decision entries for approval, and checks whether accepted findings landed. Use after finishing a chunk of work in a flow.
+description: Catch up the design memory without running a critique. Looks at what changed (digest), logs edits, picks up the triage done in Figma, marks findings that look fixed, and refreshes the card's counts. Works silently. Use when the designer wants the memory and the card up to date without a review. Every review does the same catch-up first.
 ---
 
-# Design Checkpoint
+# Design Catch-up
 
-Log a meaningful change in the design memory. You draft; the designer approves. Keep messages short and casual.
+The first half of `review`, without the critique. Silent: no questions, no drafts to approve. Keep messages short and casual.
 
-1. Load `context` and resolve the scope (frame or flow). Load `memory-format` and `figma-use`.
+1. **Scope.** Load `memory-format` and `figma-use`. Load `context` with the target node, or with the file's registered flows when there is no link. It may ask a new flow's purpose; that is the only question.
 
-2. **Current state.** For the frames in scope, call `get_metadata` for structure and, for at most 3 key frames, `get_screenshot`. Compute a fingerprint for every frame in scope: `nodeId|name|childCount|WxH`, joined by ` ; `.
+2. **Digest.** Load `digest` for each flow in scope. Print its summary lines.
 
-3. **Diff.** Read the flow's line in `memory/index/fingerprint`. If it does not exist, fall back to the `fingerprint` on the newest `C-` card for this scope (legacy). If neither exists, say this is the first checkpoint and skip the diff. Otherwise list: frames added or removed, renamed, child count changed, size changed.
+3. **Catch up.** Do exactly what `review` step 3 describes: triage done in Figma, design edits, findings that landed, direction, index. Same rules: never infer why something was dismissed, mark every guess as inferred.
 
-4. **Ask the designer one question:** "What did you change, in a sentence?" The fingerprint diff is evidence, not the whole story: it cannot see visual edits. Combine both.
+4. **Parked findings.** If the digest says a flow's stage moved to `polish`, bring its parked findings back as `review` step 8 describes, and write the ones that still apply with `review` step 9.
 
-5. **Draft** (nothing is written yet):
-   - one `C-` change log card (`changed`, a likely `why` marked `(inferred)`, `nodes`, and `dismissed:` for findings the designer set to `Dismissed` in Figma), but only if something changed, was dismissed or landed. If nothing did, say so, propose no card, and only update the index
-   - the new fingerprint, which goes into `memory/index/fingerprint`, never on the card
-   - findings whose status in Figma no longer matches the last card's story, listed as a one-line reconciliation
-   - any new decisions, or existing ones to supersede (name the old ID)
-   - open questions to open or close
+5. **Hand over.** One or two lines: what was logged, what looks fixed, what is still open. If nothing changed, say "Nothing new since <date>."
 
-6. **Soft check.** For each finding in scope (`readFindings`) with status `accepted` (`Will do`), use the diff and screenshots to say whether it appears to have landed. Offer to set `landed` for those that did. Flag the rest as "accepted but not visible yet". Do not change statuses without approval.
+6. **Status.** Update the flow's line in `memory/index/status` (keep `next`, refresh `open_q`).
 
-7. **Approval.** Show all drafts in chat and ask for approval or edits. Write nothing before approval.
-
-8. **Write** the approved entries. Allocate each ID immediately before writing. For approved `landed` findings and any findings the designer set to `Dismissed` or `Done` in Figma, mention them in the `C-` card (`changed`, `dismissed:`) and remove those instances (pruning rule in `memory-format`). To supersede a decision, update the old card: `status: superseded` and `superseded_by: <new ID>`. Never delete other cards.
-
-9. **Index.** Update `last_checkpoint` in `memory/index/project` (`<date> (C-###)` when a card was written, otherwise `<date> (no changes)`), the flow's line in `memory/index/status` including the next suggested review, and the flow's line in `memory/index/fingerprint` (create the card if missing). If legacy `fingerprint:` lines remain on `C-` cards, offer once to remove them; do it only with approval.
-
-10. **PM note.** Finish with one or two lines on what looks neglected (reviews never run, questions open a long time, decisions without a `why`) and the suggested next step. Suggestions only.
-
-11. **Stage line** (`memory-format`). At step 2 set `stage=checkpoint`, `detail=comparing to last checkpoint`. After step 10 set `open`, `p1`, `p2`, `p3`, `f1`, `f2` and `f3` from `readFindings`, copy `last` over from the existing state file, and set `stage=triage` (`detail=<n> findings waiting in Figma`) if open findings remain, otherwise `stage=idle`.
+7. **Stage line** (`memory-format`). At step 1 set `stage=checkpoint`, `detail=catching up`, `progress=1/2`; at step 3 `progress=2/2`. At the end clear `progress`, set `open`, `p1`, `p2`, `p3`, `f1`, `f2` and `f3` from `readFindings`, copy `last` over, and keep the existing `actions` (they still point at the next review). Then:
+   - findings `Will do`: `stage=fix`, `detail=<n> changes to apply`
+   - findings `Open` or `On hold`: `stage=triage`, `detail=<n> findings waiting in Figma`
+   - nothing pending: `stage=idle`, `detail=` (empty)
