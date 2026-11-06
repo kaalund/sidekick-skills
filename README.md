@@ -1,6 +1,6 @@
 # design-memory
 
-A Claude Code plugin that gives a Figma file a memory: brief, decisions, change log, critique findings and open questions, all kept as visible nodes on a `🤖 Agentic Memory` page. Findings are instances of a `Finding` component (in `06 Components`) placed directly below the frame they are about, not on the Memory page, with a Status variant (Open, Will do, On hold, Dismissed, Done), so you can triage in Figma at any time and the agent reads it back. The agent works silently: it looks at what changed, logs it, marks its guesses as inferred, and asks only what a new flow is for.
+A Claude Code plugin that gives a Figma file a memory: brief, decisions, change log, critique findings and open questions, all kept in one Figma spec, `🤖 Agentic memory.md`, that sits next to your flows so you read it beside the journeys it describes. Findings are instances of a `Finding` component (from the `Sidekick` library) placed directly below the frame they are about, not in the spec, with a Status variant (Open, Will do, On hold, Dismissed, Done), so you can triage in Figma at any time and the agent reads it back. The agent works silently: it looks at what changed, logs it, marks its guesses as inferred, and asks only what a new flow is for.
 
 ## Install
 
@@ -13,7 +13,7 @@ Choose user scope so it works from any directory. For development you can instea
 
 ## Commands
 
-- `/start` sets up the Memory page, interviews you for the project brief, and registers the file in the shared design folder.
+- `/start` sets up the memory spec (and moves an older Memory page into it), interviews you for the project brief, and registers the file in the shared design folder.
 - `/review` looks at what changed since last time, catches the memory up, picks the critique that fits the flow's stage and runs it with scoped memory. Findings land on the canvas for triage in Figma; minor ones are parked during exploration.
 - `/checkpoint` (Catch up on the card) brings the memory up to date without a critique: digest, change log, findings that look fixed.
 

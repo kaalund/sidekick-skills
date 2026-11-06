@@ -17,7 +17,7 @@ The first half of `review`, without the critique. Silent: no questions, no draft
 
 5. **Hand over.** One or two lines: what was logged, what looks fixed, what is still open. If nothing changed, say "Nothing new since <date>."
 
-6. **Status.** Update the flow's line in `memory/index/status` (keep `next`, refresh `open_q`).
+6. **Status.** Update the flow's bullet in the `status` entry (keep `next`, refresh `open_q`).
 
 7. **Stage line** (`memory-format`). At step 1 set `stage=checkpoint`, `detail=catching up`, `progress=1/2`; at step 3 `progress=2/2`. At the end clear `progress`, set `open`, `p1`, `p2`, `p3`, `f1`, `f2` and `f3` from `readFindings`, copy `last` over, and keep the existing `actions` (they still point at the next review). Then:
    - findings `Will do`: `stage=fix`, `detail=<n> changes to apply`

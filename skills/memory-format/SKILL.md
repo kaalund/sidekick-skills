@@ -1,45 +1,48 @@
 ---
 name: memory-format
-description: Reference for the design-memory plugin: Memory page frames, card templates, scope syntax, ID rules, config schema and Figma helper snippets. Load this before reading or writing any design memory. Not for direct use.
+description: Reference for the design-memory plugin: the memory spec (Figma Specs document) and its entries, scope syntax, ID rules, config schema and Figma helper snippets. Load this before reading or writing any design memory. Not for direct use.
 ---
 
 # Design Memory Format
 
 The single contract for every design-memory skill. If a skill and this file disagree, this file wins.
 
-## Memory page
+## Memory spec
 
-One page named `🤖 Agentic Memory`, last in the page list. Older files may still use the legacy name `Memory (agent-maintained)`; treat it as the same page and do not rename it unless the designer asks. It holds seven top-level frames, left to right, named exactly:
+The memory is one Figma spec (a native `SPEC_BLOCK` document, GitHub-flavoured markdown) named exactly `🤖 Agentic memory.md`, on the page with the designs. It sits 80px to the left of the journey section it relates to, top aligned with it, so the designer reads it next to the flows. It replaces the old `🤖 Agentic Memory` page and its seven frames (see Legacy memory page). Skills read and write it only through `figma.spec.*` (helpers below), never through text nodes.
 
-`00 Index`, `01 Brief`, `02 Decisions`, `03 Change log`, `04 Findings`, `05 Open questions`, `06 Components`
+The document is the H1 title block, then five H2 sections in this order: `## Index`, `## Brief`, `## Decisions`, `## Change log`, `## Open questions`. Never name an H3 like a section.
 
-Frames use vertical auto-layout, padding 24, 80px gaps between frames. `06 Components` holds the `Finding` component set (see below); it is the only frame that holds no cards.
+**Specs must be on.** Before the first `figma.spec.*` call of a run, call `whoami` and check `specs_enabled: true` on the plan that owns the file (when the account has several plans and you cannot tell which owns the file, stop and say so). If Specs is not enabled, tell the designer in one line and stop: memory cannot be written without it.
 
-## Cards
+## Entries
 
-A card is a single text node placed directly inside a topic frame, named `memory/<topic>/<ID>` (for example `memory/decisions/D-007`). Findings are the exception: they are component instances with the same naming, placed in a findings frame under the frame they are about (see below). The text body is lines of `key: value`. Continuation lines for a long value start with two spaces. Parse by splitting each line on the first `: `. Cards use Inter Regular 12, width 480, so they stack.
+An entry is an `### <ID> <title>` heading, a blank line, then `- key: value` lines. A value is one line; a value with several items is a key with nested bullets (`  - item`). Parse by splitting each bullet on the first `: `. Findings are the exception: they are component instances placed under the frame they are about (see below). In the other skills, "card" means an entry in the spec.
 
-Topic names in card names: `index`, `brief`, `decisions`, `changelog`, `findings`, `questions`.
+- Figma normalises the markdown when it stores it (a blank line after every heading, `- ` bullets), so always write that form.
+- New entries go directly under their section heading, newest first. Edit an entry with the helpers: they change one line and never rewrite the document, so a designer or another agent editing elsewhere is not overwritten.
+- **Comments.** A designer can comment on any line (`[comment:<uuid>]…[/comment:<uuid>]` markers in the markdown). Comments are how a designer corrects a guess without editing. Never remove or move a marker. When you change a line that carries one, keep the marker pair around the new value. A designer's comment on an `(inferred)` line counts as text the designer wrote: read it, and let it win over the guess.
+- Read the whole document in script (`readMemoryMarkdown`, which pages through long documents) and return only the entries in scope. The document grows without limit and must never be copied into the conversation whole.
 
 ### Decision card (`D-###`)
 
 ```
-id: D-007
-title: Use inline validation on the payment form
-status: active          # active | inferred | superseded
-scope: flow:F-03
-date: 2026-10-12
-context: Guest payment form had a long error list on submit.
-why: Inline validation cuts the recovery effort.
-alternatives: Error summary at top (rejected: forces scrolling)
-nodes: 12:34 "Payment"
+### D-007 Use inline validation on the payment form
+
+- status: active          # active | inferred | superseded
+- scope: flow:F-03
+- date: 2026-10-12
+- context: Guest payment form had a long error list on submit.
+- why: Inline validation cuts the recovery effort.
+- alternatives: Error summary at top (rejected: forces scrolling)
+- nodes: 12:34 "Payment"
 ```
 
-Optional keys: `superseded_by: D-012` (set when `status: superseded`), `variant_only: yes`.
+(The `# …` note is documentation, not written to the spec.) The heading carries the id and the title. Optional keys: `superseded_by: D-012` (set when `status: superseded`), `variant_only: yes`.
 
 ### Brief cards
 
-`memory/brief/file` and `memory/brief/F-03`.
+Under `## Brief`: `### file` and `### F-03`.
 
 - File brief keys: `purpose`, `users`, `goals`, `constraints`, `platform`, `brand`, `references`, `risks`.
 - Flow mini-brief keys: `for`, `who`, `done_when`.
@@ -48,25 +51,26 @@ Optional keys: `superseded_by: D-012` (set when `status: superseded`), `variant_
 ### Change log card (`C-###`)
 
 ```
-id: C-004
-date: 2026-10-12
-scope: flow:F-03
-changed: Moved coupon field below the total
-why: Likely to reduce hesitation before payment (inferred)
-nodes: 12:34 "Payment"
+### C-004
+
+- date: 2026-10-12
+- scope: flow:F-03
+- changed: Moved coupon field below the total
+- why: Likely to reduce hesitation before payment (inferred)
+- nodes: 12:34 "Payment"
 ```
 
 Optional key `dismissed:`: one line of short topics for findings dismissed in a triage, each with a brief reason in parentheses when given or the decision id if promoted (`dismissed: Egenkapital focus states (Eufemia, D-001); touch targets under 44px`). It exists so later reviews do not re-raise them; keep it to topics, not ticket history.
 
 Write a `C-` card only when something happened: a design change, a dismissal, or a finding that landed. A catch-up with nothing to report writes no card; it only updates `last_checkpoint` in the index. Never write a card whose `changed` is just "no design changes".
 
-The structural fingerprint does not live on `C-` cards (it is machine state, not history). It lives in the local cache (see Local cache). Older files may still have a `memory/index/fingerprint` card, and older `C-` cards a `fingerprint:` line; read the newest of those only as a fallback when the cache has no fingerprint for the flow, and never write them again.
+The structural fingerprint does not live on `C-` cards (it is machine state, not history). It lives in the local cache (see Local cache). Older files may still have a `memory/index/fingerprint` card on a legacy memory page, and older `C-` cards a `fingerprint:` line; read the newest of those only as a fallback when the cache has no fingerprint for the flow, and never write them again.
 
 ### Findings (`FD-###`): `Finding` component instances
 
-A finding is an instance of the `Finding` component set, named `memory/findings/FD-###` and placed on the design page, not on the Memory page, inside the findings frame of the frame it is about. That frame is a vertical auto-layout frame named `<frame name> - Sidekick Findings 🤖` (16px gap, no padding, no fill) that sits directly below the frame it is about. The first finding about a frame creates it, and every later finding about the same frame is added to it. `04 Findings` stays on the Memory page but now only holds legacy text-card findings. The designer changes status in the Figma properties panel; agents read and write the same properties.
+A finding is an instance of the `Finding` component set, named `memory/findings/FD-###` and placed on the design page, not in the memory spec, inside the findings frame of the frame it is about. That frame is a vertical auto-layout frame named `<frame name> - Sidekick Findings 🤖` (16px gap, no padding, no fill) that sits directly below the frame it is about. The first finding about a frame creates it, and every later finding about the same frame is added to it. A legacy memory page's `04 Findings` frame only holds legacy text-card findings. The designer changes status in the Figma properties panel; agents read and write the same properties.
 
-Component set `Finding` (in `06 Components`), variant properties:
+Component set `Finding` (from the `Sidekick` library), variant properties:
 
 | property | values |
 |---|---|
@@ -96,7 +100,7 @@ Rules:
 - **Placement.** The anchor is the finding's `frame:` scope, or the reviewed frame when the scope is `flow:` or `file`. The findings frame goes into the anchor's parent when that is a page or section, otherwise onto the page, aligned to the anchor's left edge and 16px below it. `writeFinding` finds it by its exact name among that parent's children and creates it when it is missing, so never rename it, and never make a second one for the same frame. If the anchor frame is renamed, the next finding starts a new findings frame and the old one keeps its findings. Findings written by older versions sit loose below their frame; leave them where they are (they are still read and updated like the others). `readFindings`, `updateFinding` and `nextFindingId` scan the instances by name on every page, so moving a finding in Figma is fine.
 - **Finding library.** The `Finding` component set lives in the published `Sidekick` Figma library. Skills only ever import it and make instances; they never build it (the one exception is `build-finding-component`, below). Resolve the key like this, before the first `writeFinding` of a run:
   1. Use `findingComponentKey` from the config if it is there.
-  2. Otherwise, if `06 Components` already holds a local `Finding` set (older files, or one made by `build-finding-component`), use it: no key, no library check.
+  2. Otherwise, if the file already holds a local `Finding` component set on any page (older files, or one made by `build-finding-component`), use it: no key, no library check.
   3. Otherwise call `get_libraries` for the file, every time you run this check, even when an earlier call in this conversation said `Sidekick` was missing: the designer may have enabled it since, and a Retry is exactly that case. Never reuse an earlier result. `Sidekick` counts as enabled only when it is in `libraries_added_to_file`; if it is only under the libraries available to add, or absent, go to the missing-library steps below.
   4. Otherwise call `search_design_system` with `{entity: "component", query: "Finding"}` and `includeLibraryKeys: [<Sidekick library key>]`. Take the component set named exactly `Finding`, and save its key in the config as `findingComponentKey` so the lookup happens once.
   5. Pass the key to `writeFinding` as `libraryKey`. If the import throws, or step 4 finds no `Finding` set, go to the missing-library steps.
@@ -105,25 +109,34 @@ Rules:
 
 **Legacy findings.** Older files may hold findings as one-line text cards (`FD-014 | visual | P2 | frame:12:34 | claim | dismissed | reason | 2026-10-12`, columns `id | skill | severity | scope | claim | status | reason | date`). Keep reading them as a fallback via `readFindings`. Do not rewrite them unless the designer asks; new findings are always instances.
 
-### Open questions (compact, one line)
+### Open questions (one checkbox line each)
 
-Open question (`Q-###`):
+Open question (`Q-###`), a task-list line directly under `## Open questions` (no heading, no sub-bullets), newest first:
 
 ```
-Q-009 | flow:F-03 | FD-016 deferred: error copy needs content review | open | 2026-10-12 |
+- [ ] Q-009 | flow:F-03 | FD-016 deferred: error copy needs content review | 2026-10-12
+- [x] Q-008 | file | Which approval flow applies? | 2026-10-10 | 2026-10-12
 ```
 
-Columns: `id | scope | question | status | opened | closed`. Status is `open` or `closed`. A deferred finding also gets a `Q-###` entry whose question text starts with the finding id.
+Columns: `id | scope | question | opened | closed`. An open question is `- [ ]` with no `closed` column; closing it ticks the box (`- [x]`) and appends the closing date. A deferred finding also gets a `Q-###` line whose question text starts with the finding id.
 
-### Index cards
+### Index entries
 
-- `memory/index/project`: keys `intent`, `last_checkpoint`, `workspace_folder`.
-- `memory/index/flows`: one line per flow, `F-03 | Checkout | section:123:456 | parent:-`. Anchor kind is `page` or `section`. Parent is `-` or another flow id.
-- `memory/index/status`: one line per flow, `F-03 | last_review: cognitive-load 2026-10-10 | next: visual-critique | open_q: 3`.
+Under `## Index`, three entries:
 
-- `memory/index/fingerprint` (legacy, read only): older files keep the structural fingerprint here, one line per flow (`F-03 | 12:34|Payment|7|390x844 ; ...`). New fingerprints go to the local cache. Leave the card where it is; `digest` reads it once as a fallback.
+- `### project`: keys `intent`, `last_checkpoint`, `workspace_folder`.
+- `### flows`: one bullet per flow, `- F-03 | Checkout | section:123:456 | parent:-`. Anchor kind is `page` or `section`. Parent is `-` or another flow id.
+- `### status`: one bullet per flow, `- F-03 | last_review: cognitive-load 2026-10-10 | next: visual-critique | open_q: 3`.
 
-`flows` and `status` are single text nodes holding many lines, so they are updated by rewriting the node's full text.
+`flows` and `status` bullets are not `key: value` pairs. Read them as lines (`entry.lines` in `parseMemory`), and change one with `replaceLines`.
+
+## Legacy memory page
+
+Older files keep their memory on a page named `🤖 Agentic Memory` (or `Memory (agent-maintained)`) with seven frames, `00 Index` to `06 Components`, and cards as text nodes named `memory/<topic>/<ID>` with plain `key: value` lines. When a run finds the legacy page and no memory spec, it migrates first, silently (`context` and `start` do this):
+
+1. Create the spec (`createMemorySpec`) with the five sections and write each card as an entry: the `id:` and `title:` lines become the heading, every other `key: value` line becomes a bullet, continuation lines become nested bullets, the `memory/index/flows` and `status` lines become bullets, `memory/brief/<scope>` becomes `### <scope>` under `## Brief`, and `04 Findings` text cards are not copied (they stay readable through `readFindings`). The legacy `memory/index/fingerprint` card is not copied either: write it to the local cache's `fingerprint` file if the cache has none.
+2. Never delete or edit the legacy page. Tell the designer in one line: "Moved the memory to the 🤖 Agentic memory.md spec next to your flows. The old page is untouched and can be deleted."
+3. From then on only the spec is read and written. The legacy page is ignored, apart from the fingerprint fallback and legacy findings above.
 
 ## Scope syntax
 
@@ -135,7 +148,7 @@ Context for a frame is: its own `frame:` cards, the cards of its flow and every 
 
 Prefix plus a zero-padded 3-digit number: `D-`, `C-`, `FD-`, `Q-`. Flows are `F-01`, nested flows `F-01.1`.
 
-Allocate immediately before writing by scanning the existing cards in the target frame for the highest number and adding one (see `nextId`). Never cache an ID across a user prompt, because another agent or designer may have written in between.
+Allocate immediately before writing by reading the spec and taking the highest number for the prefix plus one (`nextMemoryId`; `nextFindingId` for `FD-`). Never cache an ID across a user prompt, because another agent or designer may have written in between.
 
 ## Config
 
@@ -152,7 +165,7 @@ Allocate immediately before writing by scanning the existing cards in the target
 }
 ```
 
-`workspaceFolder` is the shared design folder: one git repo for all Figma files, holding `.claude/settings.json` (the enabled design plugins) and a `files/` folder with `<slug>.state` (the stage line) per Figma file. The brief and goals are not kept on disk: the Figma file's memory page is the only copy. Every entry has a `slug`; an entry without one is ignored. The `catalog` array is seeded by `review`. Optional: `findingComponentKey`, the key of the published `Finding` component set. Skills fill it in after the first lookup in the `Sidekick` library (see Findings, Finding library).
+`workspaceFolder` is the shared design folder: one git repo for all Figma files, holding `.claude/settings.json` (the enabled design plugins) and a `files/` folder with `<slug>.state` (the stage line) per Figma file. The brief and goals are not kept on disk: the Figma file's memory spec is the only copy. Every entry has a `slug`; an entry without one is ignored. The `catalog` array is seeded by `review`. Optional: `findingComponentKey`, the key of the published `Finding` component set. Skills fill it in after the first lookup in the `Sidekick` library (see Findings, Finding library).
 
 Seed file `~/Library/Application Support/Sidekick/seeds/<slug>.md`, written by the Sidekick card (in its own support folder, not the design folder) before it launches `start`, and deleted by Sidekick once the stage line says `brief written`: a `---` header with `fileKey`, `name`, `slug` and `url`, then one `##` section per answer (Purpose and problem, Users and audience, Goals and success, Scope of this file, Platform, Brand). `unknown` means the designer skipped the question. Skills only read it, and only by its exact path.
 
@@ -167,7 +180,7 @@ What changed on the canvas is evidence and is not marked. Text the designer wrot
 
 ## Local cache
 
-Machine state that can be rebuilt from the Figma file at any time. It lives in the shared design folder next to the state file, is never shown on the Memory page, and is per machine: two designers on one file each build their own. Only `digest` writes it; other skills read it.
+Machine state that can be rebuilt from the Figma file at any time. It lives in the shared design folder next to the state file, is never shown in the memory spec, and is per machine: two designers on one file each build their own. Only `digest` writes it; other skills read it.
 
 ```
 <folderPath>/files/
@@ -265,73 +278,113 @@ Stage meanings: `start` setup and brief interview (`detail=brief interview` mean
 - Load the `figma-use` skill before every `use_figma` call.
 - Do not use `setPluginData`, `createImageAsync` or `loadAllPagesAsync`; they are unsupported.
 - Switch pages with `await figma.setCurrentPageAsync(page)` before reading or writing its nodes.
-- Memory is only ever visible nodes: cards on the Memory page, and finding instances in the findings frames below the frames they are about.
+- Memory is only ever visible nodes: the memory spec, and finding instances in the findings frames below the frames they are about.
 
 ## Figma helpers
 
-Prepend what you need to `use_figma` code. Tested against a scratch file: create the page with `figma.createPage()`, switch with `setCurrentPageAsync`, create frames with `ensureTopicFrame` (spaced 608px apart), write cards with `writeCard`. Calling `resize()` resets sizing to fixed, so `ensureTopicFrame` sets fixed width and hugging height afterwards; without that, cards overflow the frame.
+Prepend what you need to `use_figma` code. Tested on a real file: `readMemoryMarkdown` pages through a long document and returns it unchanged, `addEntry` and `setKey` change one place and leave the rest of the document as it was, `createMemorySpec` places the spec left of the journey.
+
+The spec API cannot resize a spec (`resize` does not exist on a spec node) and `editContent` needs `oldText` to match exactly once, which is why `replaceLines` widens its match upwards until it is unique. Do not use `setContent` on an existing memory spec: it clears and recreates the document and would drop the designer's comments.
 
 ```js
-async function ensureFont() {
-  await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+const SPEC_NAME = "🤖 Agentic memory.md";
+const MARKS = /\[\/?comment:[0-9a-fA-F-]+\]/g;   // designer comment markers inside the markdown
+const plain = l => l.replace(MARKS, "");
+
+// The memory spec, searched page by page (the current page is left on the page that holds it).
+async function findMemorySpec() {
+  for (const page of figma.root.children) {
+    await figma.setCurrentPageAsync(page);
+    const s = page.findAllWithCriteria({ types: ["SPEC_BLOCK"] })
+      .find(n => n.specBlockType === "DOCUMENT" && n.name === SPEC_NAME);
+    if (s) return s;
+  }
+  return null;
 }
-function findMemoryPage() {
-  return figma.root.children.find(p => p.name === "🤖 Agentic Memory" || p.name === "Memory (agent-maintained)") || null;
+// Create it, 80px left of the journey (the top-level section or frame holding `anchor`, or the leftmost node that is not a spec when the anchor is the page), top aligned.
+// Switch to the anchor's page first: the spec is created on the current page. `content` is the seed markdown: the H1 `# 🤖 Agentic memory.md` and the five H2 sections.
+async function createMemorySpec(anchor, content) {
+  const { specNodeId } = await figma.spec.createOnCanvasAsync({ title: SPEC_NAME, content });
+  const spec = await figma.getNodeByIdAsync(specNodeId);
+  let top = anchor.type === "PAGE" ? anchor.children.filter(n => n.type !== "SPEC_BLOCK").reduce((a, b) => (b.x < a.x ? b : a)) : anchor;
+  while (top.parent && top.parent.type !== "PAGE") top = top.parent;
+  spec.x = top.x - spec.width - 80;
+  spec.y = top.y;
+  return spec;
 }
-function topicFrame(page, name) {
-  return page.children.find(n => n.type === "FRAME" && n.name === name) || null;
+async function readMemoryMarkdown(specId, maxLines) {
+  const lines = [];
+  let offset = 0, more = true;
+  while (more) {
+    const r = await figma.spec.getContent({ specNodeId: specId, offset, maxLines });
+    lines.push(...r.markdown.split("\n"));
+    offset += r.linesReturned;
+    more = r.hasMore;
+  }
+  return lines.join("\n");
 }
-function ensureTopicFrame(page, name, x) {
-  let f = topicFrame(page, name);
-  if (f) return f;
-  f = figma.createAutoLayout("VERTICAL");
-  f.name = name;
-  f.paddingLeft = f.paddingRight = f.paddingTop = f.paddingBottom = 24;
-  f.itemSpacing = 12;
-  f.x = x; f.y = 0;
-  page.appendChild(f);
-  f.resize(528, 200);
-  f.counterAxisSizingMode = "FIXED";
-  f.primaryAxisSizingMode = "AUTO";
-  return f;
+// Entries { section, id, title, keys, lines } and Open questions lines { id, scope, question, opened, closed, status }.
+// Filter by scope in script and return only what is in scope.
+function parseMemory(md) {
+  const entries = [], questions = [];
+  let section = "", cur = null, key = null, m;
+  for (const line of plain(md).split("\n")) {
+    if ((m = line.match(/^## (.+)$/))) { section = m[1].trim(); cur = key = null; }
+    else if ((m = line.match(/^### (\S+)\s*(.*)$/))) { cur = { section, id: m[1], title: m[2], keys: {}, lines: [] }; key = null; entries.push(cur); }
+    else if (section === "Open questions" && (m = line.match(/^- \[( |x)\] (.*)$/))) {
+      const c = m[2].split(" | ");
+      questions.push({ id: c[0], scope: c[1], question: c[2], opened: c[3], closed: c[4] || "", status: m[1] === "x" ? "closed" : "open" });
+    }
+    else if (cur && (m = line.match(/^- ([a-z_]+):\s*(.*)$/))) { key = m[1]; cur.keys[key] = m[2]; }
+    else if (cur && key && (m = line.match(/^\s+- (.*)$/))) { cur.keys[key] += (cur.keys[key] ? "\n" : "") + m[1]; }
+    else if (cur && (m = line.match(/^- (.*)$/))) { key = null; cur.lines.push(m[1]); }
+  }
+  return { entries, questions };
 }
-function readCards(frame) {
-  return frame.children
-    .filter(n => n.type === "TEXT" && n.name.startsWith("memory/"))
-    .map(n => ({ nodeId: n.id, name: n.name, text: n.characters }));
+// prefix: "D", "C" or "Q".
+function nextMemoryId(md, prefix) {
+  const re = new RegExp("^(?:### |- \\[[ x]\\] )" + prefix + "-(\\d+)", "gm");
+  const nums = [...plain(md).matchAll(re)].map(m => parseInt(m[1], 10));
+  return prefix + "-" + String((nums.length ? Math.max(...nums) : 0) + 1).padStart(3, "0");
 }
-function nextId(frame, prefix) {
-  const nums = frame.children
-    .filter(n => n.name.startsWith("memory/"))
-    .map(n => n.name.split("/").pop())
-    .filter(id => id.startsWith(prefix + "-"))
-    .map(id => parseInt(id.slice(prefix.length + 1), 10))
-    .filter(n => !Number.isNaN(n));
-  const next = (nums.length ? Math.max(...nums) : 0) + 1;
-  return prefix + "-" + String(next).padStart(3, "0");
+// Insert a new entry (or an Open questions line) directly under its section heading, newest first.
+async function addEntry(specId, section, block) {
+  const h = "## " + section + "\n";
+  await figma.spec.editContent({ specNodeId: specId, edits: [{ oldText: h, newText: h + "\n" + block.trim() + "\n" }] });
 }
-async function writeCard(frame, topic, id, body) {
-  await ensureFont();
-  const t = figma.createText();
-  t.fontName = { family: "Inter", style: "Regular" };
-  t.fontSize = 12;
-  t.characters = body;
-  t.name = "memory/" + topic + "/" + id;
-  t.textAutoResize = "HEIGHT";
-  t.resize(480, t.height);
-  frame.appendChild(t);
-  return t.id;
+// Replace lines[from..to] with newLines in the document. `lines` is readMemoryMarkdown(...).split("\n").
+async function replaceLines(specId, lines, from, to, newLines) {
+  const md = lines.join("\n");
+  let a = from;
+  const text = () => lines.slice(a, to + 1).join("\n");
+  while (md.split(text()).length !== 2 && a > 0) a--;
+  if (md.split(text()).length !== 2) throw new Error("no unique match for the edit");
+  await figma.spec.editContent({ specNodeId: specId, edits: [{ oldText: text(), newText: lines.slice(a, from).concat(newLines).join("\n") }] });
 }
-async function updateCard(frame, name, body) {
-  await ensureFont();
-  const t = frame.children.find(n => n.type === "TEXT" && n.name === name);
-  if (!t) throw new Error("card not found: " + name);
-  t.characters = body;
-  return t.id;
+// Set one key of an entry (a single-line value), or add the key at the end of the entry when it is missing.
+// Keep a `[comment:…]` pair in `value` when the old line carried one.
+async function setKey(specId, entryId, key, value) {
+  const lines = (await readMemoryMarkdown(specId)).split("\n");
+  const start = lines.findIndex(l => new RegExp("^### " + entryId + "( |$)").test(plain(l)));
+  if (start < 0) throw new Error("entry not found: " + entryId);
+  let end = start + 1;
+  while (end < lines.length && !/^#{2,3} /.test(plain(lines[end]))) end++;
+  while (!plain(lines[end - 1]).trim()) end--;
+  let from = -1, to = -1;
+  for (let i = start + 1; i < end; i++) {
+    if (from < 0 && plain(lines[i]).startsWith("- " + key + ":")) from = to = i;
+    else if (from >= 0 && /^\s+- /.test(plain(lines[i]))) to = i;   // nested bullets belong to the key
+    else if (from >= 0) break;
+  }
+  const newLine = "- " + key + ": " + value;
+  if (from < 0) return replaceLines(specId, lines, end - 1, end - 1, [lines[end - 1], newLine]);
+  return replaceLines(specId, lines, from, to, [newLine]);
 }
 ```
 
-Finding helpers (instances). Findings are read with `readFindings()`, written with `writeFinding(page, f, libraryKey, anchorId)`, changed with `updateFinding(id, patch)`, and numbered with `nextFindingId()`. They scan every page, and `writeFinding` adds the instance to the findings frame of `anchorId` (a frame node id), creating that frame under the anchor when it doesn't exist. Remove a finding with `removeFinding(id)`, never with a bare `node.remove()`. Because they switch pages, call `await figma.setCurrentPageAsync(...)` again afterwards before touching other nodes. Prepend `const FILE_KEY = "<fileKey>";` before the block (used for links). Status values are the card statuses (`open`, `accepted`, ...), mapped to variants internally. `writeFinding` takes `f.scope` in normal syntax (`frame:3962:13783`) and shows the frame name as a link. Patch keys for `updateFinding`: `status`, `severity`, `claim`, `reason`, `scope`, `skill`, `date`.
+For the `flows` and `status` entries (bullets that are not `key: value`), a bullet is changed with `replaceLines` after finding its line index in `readMemoryMarkdown(specId).split("\n")`; a new bullet is added by replacing the entry's last line with `[thatLine, newBullet]`, and a `(no flows registered yet)` placeholder bullet is replaced by the first real one. Close an open question by replacing its line with the ticked one.
+
+Finding helpers (instances). Findings are read with `readFindings()`, written with `writeFinding(f, libraryKey, anchorId)`, changed with `updateFinding(id, patch)`, and numbered with `nextFindingId()`. They scan every page, and `writeFinding` adds the instance to the findings frame of `anchorId` (a frame node id), creating that frame under the anchor when it doesn't exist. Remove a finding with `removeFinding(id)`, never with a bare `node.remove()`. Because they switch pages, call `await figma.setCurrentPageAsync(...)` again afterwards before touching other nodes. Prepend `const FILE_KEY = "<fileKey>";` before the block (used for links). Status values are the card statuses (`open`, `accepted`, ...), mapped to variants internally. `writeFinding` takes `f.scope` in normal syntax (`frame:3962:13783`) and shows the frame name as a link. Patch keys for `updateFinding`: `status`, `severity`, `claim`, `reason`, `scope`, `skill`, `date`.
 
 ```js
 const STATUS_TO_VARIANT = { open: "Open", accepted: "Will do", deferred: "On hold", dismissed: "Dismissed", landed: "Done" };
@@ -342,11 +395,15 @@ async function ensureFindingFonts() {
     await figma.loadFontAsync({ family: "Inter", style });
   }
 }
-async function findingSet(page, libraryKey) {
+async function findingSet(libraryKey) {
   if (libraryKey) return await figma.importComponentSetByKeyAsync(libraryKey);
-  // Older files only: a set that already exists locally. Never build one here.
-  const comps = topicFrame(page, "06 Components");
-  return (comps && comps.children.find(n => n.type === "COMPONENT_SET" && n.name === "Finding")) || null;
+  // Older files only: a set that already exists locally, on any page. Never build one here.
+  for (const page of figma.root.children) {
+    await figma.setCurrentPageAsync(page);
+    const s = page.findAllWithCriteria({ types: ["COMPONENT_SET"] }).find(n => n.name === "Finding");
+    if (s) return s;
+  }
+  return null;
 }
 function propKey(inst, name) {
   const key = Object.keys(inst.componentProperties).find(k => k.replace(/#.*$/, "") === name);
@@ -429,7 +486,8 @@ async function nextFindingId() {
 async function placeInFindingsFrame(inst, anchorId) {
   const anchor = await figma.getNodeByIdAsync(anchorId);
   if (!anchor || !anchor.absoluteBoundingBox) throw new Error("anchor frame not found: " + anchorId);
-  const parent = anchor.parent && (anchor.parent.type === "SECTION" || anchor.parent.type === "PAGE") ? anchor.parent : figma.currentPage;
+  let pg = anchor; while (pg.type !== "PAGE") pg = pg.parent;   // the helpers above switch pages, so figma.currentPage can be a different page
+  const parent = anchor.parent && (anchor.parent.type === "SECTION" || anchor.parent.type === "PAGE") ? anchor.parent : pg;
   const name = anchor.name + " - Sidekick Findings 🤖";
   let frame = parent.children.find(n => n.type === "FRAME" && n.name === name);
   if (!frame) {
@@ -460,9 +518,9 @@ async function removeFinding(id) {
   inst.remove();
   if (frame && frame.type === "FRAME" && frame.name.endsWith(" - Sidekick Findings 🤖") && frame.children.length === 0) frame.remove();
 }
-async function writeFinding(page, f, libraryKey, anchorId) {
+async function writeFinding(f, libraryKey, anchorId) {
   await ensureFindingFonts();
-  const set = await findingSet(page, libraryKey);
+  const set = await findingSet(libraryKey);
   if (!set) throw new Error("FINDING_LIBRARY_MISSING: the Finding set is not in the Sidekick library or this file; see Missing library");
   const variantName = "Status=" + STATUS_TO_VARIANT[f.status || "open"] + ", Severity=" + f.severity;
   const variant = set.children.find(c => c.name === variantName);

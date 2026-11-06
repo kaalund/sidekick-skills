@@ -16,7 +16,7 @@ One silent pass: look, catch up, critique, write. The designer is never asked to
    - **Design edits.** For each `edit` in the digest's changes, add it to the same `C-` card's `changed` (with `nodes`). Write `why:` only when the edit answers an open finding or question ("addresses FD-006"); otherwise a short guess marked `(inferred)`, or leave `why` out when there is nothing to go on.
    - **Findings that landed.** For each `Will do` finding in scope whose claim the digest's changes clearly address, set `Done` with `Reason: Looks fixed (inferred, <date>)` and `Show reason` on (`memory-format`, Inferred content). Leave it on the canvas for the designer to see. A `Done` finding whose reason starts with `Looks fixed (inferred` from an earlier pass is pruned like any other `Done` one.
    - **Direction.** Write a decision card with `status: inferred` (`memory-format`, Decision card) only for a direction-level event in the digest: every screen of a flow was removed (`F-01 dropped`), or several variants of one screen were reduced to one (`chose <variant> for <screen>`), or a new flow's stated purpose matches an existing flow's (`F-02 is an alternative to F-01`). At most two per pass. Never for single edits.
-   - **Index.** Update `last_checkpoint` in `memory/index/project` (`<date> (C-###)` or `<date> (no changes)`).
+   - **Index.** Update `last_checkpoint` in the `project` entry (`<date> (C-###)` or `<date> (no changes)`).
    Do not mention the catch-up beyond one line when it did something: "Logged 2 edits, FD-006 looks fixed."
 
 4. **Seed the catalog** if `catalog` in the config (`.design-memory/config.json` in the shared design folder) is empty. Check each skill name against the current skill list and drop entries whose skill is not installed:
@@ -33,7 +33,7 @@ One silent pass: look, catch up, critique, write. The designer is never asked to
 
 5. **Choose the review.** If the designer gave an alias (`/review visual`) or a phrase ("is this readable?"), run the closest catalog entry; if nothing matches, say so and choose yourself. Otherwise choose, in this order:
    - Prefer entries whose `phases` include the flow's stage from the digest.
-   - Prefer checks that have not run on this scope yet (compare with the `skill` and dates of the findings for the scope and the flow's `last_review` in `memory/index/status`).
+   - Prefer checks that have not run on this scope yet (compare with the `skill` and dates of the findings for the scope and the flow's `last_review` in the `status` entry).
    - Skip a check that already ran on this scope when the digest found no changes since then. Run it again when the screens it covered changed.
    - Move a check up when open questions in scope point at it.
    - **Review again.** Started without an alias while findings in scope are still `Open`, `Will do` or `On hold` (the card's Review again chip): do not start a check that has not run yet. Run again only the checks whose screens changed since they ran, on those screens. With no changes, the catch-up is the whole pass: say "Nothing changed since <last review>. <n> findings still open." and go to step 11. A new critique on top of open findings needs an alias from the designer (the card's menu).
@@ -46,7 +46,7 @@ One silent pass: look, catch up, critique, write. The designer is never asked to
    - `polish`: "This is close to done. Consistency, copy, formatting and accessibility details all count."
    Do not change the other skill or its output format.
 
-7. **Normalize** the output into a numbered list with short IDs (first letter of the skill plus a number: `C1`, `C2`). One item each: severity mapped to `P1`-`P3` (P1 critical, P2 important, P3 polish; map high/medium/low or any other scale), the claim, the reason, and the node if given. Questions the critique raises (things to decide rather than things to fix) become `Q-` lines in `05 Open questions`, not findings. Keep the list in your working context. Do not print it.
+7. **Normalize** the output into a numbered list with short IDs (first letter of the skill plus a number: `C1`, `C2`). One item each: severity mapped to `P1`-`P3` (P1 critical, P2 important, P3 polish; map high/medium/low or any other scale), the claim, the reason, and the node if given. Questions the critique raises (things to decide rather than things to fix) become `Q-` lines under `## Open questions`, not findings. Keep the list in your working context. Do not print it.
 
 8. **Filter by stage.**
    - `explore`: park every `P3` item, and any item about placeholder copy or numbers, in `files/<slug>/parked.md` (`memory-format`, Parked findings). They do not go to Figma.
@@ -58,7 +58,7 @@ One silent pass: look, catch up, critique, write. The designer is never asked to
 10. **Hand over.** One or two lines: how many findings are on the canvas below their frames and the highest severity, how many were parked until polish, and how many questions were added. The designer sets statuses on the cards in Figma, whenever they like; the next review catches up. Do not list the findings in chat and do not ask for triage.
     If the designer says in chat "FD-004 will do, FD-006 dismiss", flip the instances with `readFindings` and `updateFinding` (`accepted`: done, yes, will do; `dismissed`: no, skip; `deferred`: later). Never infer `accepted` from vague replies such as "fine" or "ok": leave those `open`. A reason the designer gives goes on the finding's `Reason`.
 
-11. **Status.** Update the flow's line in `memory/index/status` (`last_review`, `next`, `open_q`).
+11. **Status.** Update the flow's bullet in the `status` entry (`last_review`, `next`, `open_q`).
 
 12. **Stage line** (`memory-format`). Keep it current throughout. The review has four steps for the card's progress bar:
     - at step 1: `stage=review`, `detail=looking at changes`, `progress=1/4`, `actions=` (empty)
