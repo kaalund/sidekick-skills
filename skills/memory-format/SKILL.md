@@ -13,7 +13,7 @@ The memory is one Figma spec (a native `SPEC_BLOCK` document, GitHub-flavoured m
 
 The document is the H1 title block, then five H2 sections in this order: `## Index`, `## Brief`, `## Decisions`, `## Change log`, `## Open questions`. Never name an H3 like a section.
 
-**Specs must be on.** Before the first `figma.spec.*` call of a run, call `whoami` and check `specs_enabled: true` on the plan that owns the file (when the account has several plans and you cannot tell which owns the file, stop and say so). If Specs is not enabled, tell the designer in one line and stop: memory cannot be written without it.
+**Specs must be on.** Before the first `figma.spec.*` call of a run, call `whoami` and check `specs_enabled: true` on the plan that owns the file (when the account has several plans and you cannot tell which owns the file, stop and say so). If Specs is not enabled, memory cannot be written: that is the `specs` check of the Preflight, which stops the run (`review` and `start` run it before anything else).
 
 ## Entries
 
@@ -104,7 +104,7 @@ Rules:
   3. Otherwise call `get_libraries` for the file, every time you run this check, even when an earlier call in this conversation said `Sidekick` was missing: the designer may have enabled it since, and a Retry is exactly that case. Never reuse an earlier result. `Sidekick` counts as enabled only when it is in `libraries_added_to_file`; if it is only under the libraries available to add, or absent, go to the missing-library steps below.
   4. Otherwise call `search_design_system` with `{entity: "component", query: "Finding"}` and `includeLibraryKeys: [<Sidekick library key>]`. Take the component set named exactly `Finding`, and save its key in the config as `findingComponentKey` so the lookup happens once.
   5. Pass the key to `writeFinding` as `libraryKey`. If the import throws, or step 4 finds no `Finding` set, go to the missing-library steps.
-- **Missing library.** Never build the component, and never write a finding without it. Write the state file with `needs=library`, `detail=enable the Sidekick library in Figma`, empty `progress`, and copy every other key over (the card's Retry re-runs `/design-memory:start` when `stage` is `start`, otherwise `/design-memory:review`, so no command is written). Tell the designer in one or two lines: "The Sidekick library isn't enabled in this file. In Figma, open Assets, then Libraries, and turn on Sidekick. Then press Retry on the card." Stop there. Only when the designer says they cannot enable it (no access, or it is not offered) point them to `/design-memory:build-finding-component`, which builds a local copy after asking them to confirm. Any skill that rewrites the state file once the library resolves leaves `needs` out.
+- **Missing library.** Never build the component, and never write a finding without it. Write the state file with `needs=library`, `detail=Enable the Sidekick library: Assets, Libraries, Sidekick`, empty `progress`, and copy every other key over, as in Preflight (the card's Retry re-runs `/design-memory:start` when `stage` is `start`, otherwise `/design-memory:review`, so no command is written). Tell the designer in one or two lines: "The Sidekick library isn't enabled in this file. In Figma, open Assets, then Libraries, and turn on Sidekick. Then press Retry on the card." Stop there. Only when the designer says they cannot enable it (no access, or it is not offered) point them to `/design-memory:build-finding-component`, which builds a local copy after asking them to confirm. Any skill that rewrites the state file once the library resolves leaves `needs` out.
 - Existing local `Finding` sets and instances (from older files) stay valid: `findingSet` falls back to a local set only when it already exists.
 
 **Legacy findings.** Older files may hold findings as one-line text cards (`FD-014 | visual | P2 | frame:12:34 | claim | dismissed | reason | 2026-10-12`, columns `id | skill | severity | scope | claim | status | reason | date`). Keep reading them as a fallback via `readFindings`. Do not rewrite them unless the designer asks; new findings are always instances.
@@ -118,7 +118,7 @@ Open question (`Q-###`), a task-list line directly under `## Open questions` (no
 - [x] Q-008 | file | Which approval flow applies? | 2026-10-10 | 2026-10-12
 ```
 
-Columns: `id | scope | question | opened | closed`. An open question is `- [ ]` with no `closed` column; closing it ticks the box (`- [x]`) and appends the closing date. A deferred finding (`On hold`) also gets a `Q-###` line whose question text starts with the finding id; write it once per finding, so look for an existing `Q-` line starting with that id before adding one. `review` step 9 also writes the critique's questions as `Q-` lines.
+Columns: `id | scope | question | opened | closed`. An open question is `- [ ]` with no `closed` column; closing it ticks the box (`- [x]`) and appends the closing date. A deferred finding (`On hold`) also gets a `Q-###` line whose question text starts with the finding id; `review` step 3 writes it, in the pass that finds the finding `On hold`, not later. Write it once per finding, so look for an existing `Q-` line (open or closed) starting with that id before adding one. `review` step 9 also writes the critique's questions as `Q-` lines.
 
 ### Index entries
 
@@ -129,6 +129,26 @@ Under `## Index`, three entries:
 - `### status`: one bullet per flow, `- F-03 | last_review: cognitive-load 2026-10-10 | next: visual-critique | open_q: 3`.
 
 `flows` and `status` bullets are not `key: value` pairs. Read them as lines (`entry.lines` in `parseMemory`), and change one with `replaceLines`.
+
+## Preflight
+
+`review` and `start` run this before anything else that can fail: in ONE pass, before anything is written to Figma or to the local cache (the state file excepted). Run every check that applies, in this order, and do not stop at the first failure:
+
+| name | check | fix (the `detail` sentence) |
+|---|---|---|
+| `specs` | `whoami` shows `specs_enabled: true` on the plan that owns the file (see Memory spec, Specs must be on) | `Turn on Figma Specs for this file's plan` |
+| `login` | the Figma MCP session is logged in: no call fails with an authentication error, and `whoami` returns a user | `Log in to Figma in Raicode (run /mcp)` |
+| `memory` | a memory spec exists (`findMemorySpec`), or a legacy memory page that can be migrated. `start` skips this check: it creates the spec | `Run Get started on the card to set up the memory` |
+| `library` | the `Sidekick` library is enabled in the file: a FRESH `get_libraries` call every time (see Findings, Finding library: never reuse an earlier result, and `Sidekick` counts only when it is in `libraries_added_to_file`). Call it even when the config has a `findingComponentKey`. Only a file that already holds a local `Finding` set on a page (older files, Finding library rule 2) skips this check | `Enable the Sidekick library: Assets, Libraries, Sidekick` |
+| `empty-target` | `review` only: the target node exists and is not an empty frame (it has children or an image fill) | `Select a frame with content, then press Review` |
+
+If a check cannot run because an earlier one failed (no login, so no `get_libraries`), count it as not checked and list it as unchecked in the message.
+
+When every check passes, carry on. When any fails, stop before touching Figma or the cache:
+
+1. Print EVERY failing check with its exact fix in one terminal message, one line each, for example: "Can't start yet. 1) Specs is off: turn on Figma Specs for this file's plan. 2) The Sidekick library isn't enabled: in Figma, open Assets, then Libraries, and turn on Sidekick. Then press Retry on the card."
+2. Write the state file (Stage line) with `needs=<name of the FIRST failing check in the table's order>` and `detail=<that check's fix sentence from the table>` (one line, no trailing period), `stage=review` for a review and `stage=start` for a start (so the card's Retry re-runs the right skill), `progress=` EMPTY and `result=` empty. Copy every other key over, as in Missing library. `progress` must stay empty: the card treats a skill that wrote `progress` and stopped as "waiting on the terminal", which would hide the fix. The card shows `detail` for every `needs` value except `library`, which has its own picture card (its `detail` is a fallback).
+3. Never write `stage=start` with `detail=brief interview` while a blocker stands: that marker is only for `start` after the preflight, the spec, the library and the entries are done.
 
 ## Legacy memory page
 
@@ -268,11 +288,11 @@ result=
 - `last`: the friendly name of the review that ran last (the catalog `name`, e.g. `UX critique`), so the card can say "UX critique done". Only `review` sets it; every other skill that writes the file copies it over.
 - `progress`: `<step>/<total>` while a skill runs a known number of steps (`2/3`), shown as a bar and "step 2 of 3". Empty when nothing is running or the steps are unknown.
 - `result`: one plain sentence the card shows on its Ready and Findings states (for example `Nothing changed since 5 Nov. 15 still open.`), display only. Empty while a skill runs and when there is nothing to say. Only `review` sets it; other skills copy it over.
-- `needs`: `library` or a short blocker name when a skill stopped on something the designer must fix, with `detail` carrying the one-line fix. `library` means the `Sidekick` Figma library is not enabled in the file (see Findings, Missing library) and has its own card; any other value shows a generic "needs a fix" card with `detail` as the text. Omit the key otherwise.
+- `needs`: set when a skill stopped on something the designer must fix, with `detail` carrying the one-line fix. One of `specs`, `login`, `memory`, `library`, `empty-target` (the first failing Preflight check). `library` means the `Sidekick` Figma library is not enabled in the file (see Findings, Missing library) and has its own card; any other value shows a generic "needs a fix" card with `detail` as the text and a Retry button. Omit the key otherwise.
 
-Every write replaces the whole file, so read the existing one first and carry over every key you are not changing: `flow`, `open`, `p1` to `p3`, `f1` to `f3`, `last` and `result` (unless you are writing a new one). This holds for `start` too (a re-run on a file that already has findings must not wipe their counts). Only `progress` and `needs` are dropped, as described above, when the skill is no longer running or the library resolved.
+Every write replaces the whole file, so read the existing one first and carry over every key you are not changing: `flow`, `open`, `p1` to `p3`, `f1` to `f3`, `last` and `result` (unless you are writing a new one). This holds for `start` too (a re-run on a file that already has findings must not wipe their counts). Only `progress` and `needs` are dropped, as described above, when the skill is no longer running or its blocker cleared (a blocker stop is the exception: it writes `needs` and leaves `progress` empty, see Preflight).
 
-Stage meanings: `start` setup and the first brief (`detail=brief interview` is the marker meaning setup is done and the library is present, and no interview follows; the Sidekick card uses it to say the designer can switch to auto mode, so only `start` writes it, and only after the library check passed); `review` a critique is being chosen or run; `triage` findings are waiting for the designer to decide or to apply (in chat or in Figma); `idle` nothing in progress (the line shows everything as passed).
+Stage meanings: `start` setup and the first brief (`detail=brief interview` is the marker meaning setup is done and the library is present (the Preflight passed), and no interview follows; the Sidekick card uses it to say the designer can switch to auto mode, so only `start` writes it, and only after the Preflight and the library check passed); `review` a critique is being chosen or run; `triage` findings are waiting for the designer to decide or to apply (in chat or in Figma); `idle` nothing in progress (the line shows everything as passed).
 
 ## Figma access
 

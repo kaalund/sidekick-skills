@@ -15,7 +15,7 @@ Last resort for a file that cannot use the `Sidekick` Figma library. Keep your m
 
 3. **Confirm before building.** Say in two lines that a local copy will not follow later changes to the library, and ask the designer to confirm they cannot enable it. Build nothing until they say so.
 
-4. **Check for an existing set.** With `use_figma`, look for a `Finding` component set on any page (`findingSet` without a key). If one exists, do not build a second: say so and go to step 6. Build next to the memory spec (`findMemorySpec`; run `start` steps 2 and 3 first when there is none).
+4. **Check for an existing set.** With `use_figma`, look for a `Finding` component set on any page (`findingSet` without a key). If one exists, do not build a second: say so and go to step 6. Build next to the memory spec (`findMemorySpec`; when there is none, run `start` steps 2 and 3 first, without the Preflight's `library` check, which would stop on the very thing this skill works around).
 
 5. **Build it** in a frame named `🤖 Sidekick components`, placed 80px left of the memory spec and top aligned with it, to the contract in `memory-format`: 15 variants (`Status` x `Severity`, named `Status=X, Severity=Y`), each 480 wide and hugging height, with a 4px severity accent bar, severity pill, ID, status pill with dot, claim, reason (visibility bound to `Show reason`), and a footer with Skill, Scope and Date. Add the TEXT and BOOLEAN properties before `combineAsVariants`, link them via `componentPropertyReferences`, and clear fills on the inner layout frames. Colour status and severity clearly (neutral open, blue will do, amber on hold, grey dismissed, green done; red, orange, grey for P1-P3). Check the result with a screenshot.
 

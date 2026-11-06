@@ -7,7 +7,7 @@ description: Guided design review for a Figma frame or flow. Looks at what chang
 
 One silent pass: look, catch up, critique, write. The designer is never asked to confirm a guess or approve a draft, and is never asked for a reason. The only question in the whole pass is the purpose of a new flow, which `context` asks. Keep messages short and casual.
 
-1. **Scope.** Load `memory-format` and `figma-use`. Load `context` with the target node: it returns the flow chain, the kept cards and the already-considered list, and asks for a new flow's purpose.
+1. **Preflight, then scope.** Load `resolve` (the file, folder and slug), `memory-format` and `figma-use`. Get the target node from the Figma URL or the selection, then run the Preflight (`memory-format`, Preflight): `specs`, `login`, `memory`, `library` (a fresh `get_libraries`) and `empty-target`, in one pass. This is the first thing that can stop the review: until it passes, write nothing to Figma or to `files/<slug>/`. If any check fails, print every blocker with its fix, write the state file with `needs=<first failing check>` and an empty `progress`, as `memory-format` says, and stop. When it passes, write the stage line now (step 12, first bullet), and only then load `context` with the target node: it returns the flow chain, the kept cards and the already-considered list, and asks for a new flow's purpose. The stage line comes first so that a purpose prompt shows on the card as waiting on the terminal.
 
 2. **Digest.** Load `digest` with the file, the target and the flow chain. Print its summary lines as they are.
 
@@ -34,7 +34,7 @@ One silent pass: look, catch up, critique, write. The designer is never asked to
 
 5. **Choose the review.** The card always starts a review without an alias, so you choose. A designer typing `/design-memory:review visual` or a phrase ("is this readable?") in the terminal still gets the closest catalog entry; if nothing matches, say so and choose yourself. Otherwise choose, in this order:
    - Prefer entries whose `phases` include the flow's stage from the digest.
-   - Prefer checks that have not run on this scope yet (compare with the `skill` and dates of the findings for the scope and the flow's `last_review` in the `status` entry).
+   - Prefer checks that have not run on this scope yet (compare with the `skill` and dates of the findings for the scope and the flow's `last_review` in the `status` entry). Keep the `last_review` date exactly as you read it now: step 11 overwrites it, and step 12's `result` needs the old one.
    - Skip a check that already ran on this scope when the digest found no changes since then. Run it again when the screens it covered changed.
    - Move a check up when open questions in scope point at it.
    - **Review again.** Started without an alias while findings in scope are still `Open`, `Will do` or `On hold`: do not start a check that has not run yet. Run again only the checks whose screens changed since they ran, on those screens. With no changes, the catch-up is the whole pass: say "Nothing changed since <last review>. <n> findings still open." and go to step 11 (the `result` sentence in step 12 says the same). A new check type on top of open findings needs a typed alias from the designer (`/design-memory:review <alias>`).
@@ -47,15 +47,15 @@ One silent pass: look, catch up, critique, write. The designer is never asked to
    - `polish`: "This is close to done. Consistency, copy, formatting and accessibility details all count."
    Do not change the other skill or its output format.
 
-7. **Normalize** the output into a numbered list with short IDs (first letter of the skill plus a number: `C1`, `C2`). One item each: severity mapped to `P1`-`P3` (P1 critical, P2 important, P3 polish; map high/medium/low or any other scale), the claim, the reason, and the node if given. Questions the critique raises (things to decide rather than things to fix) are written as `Q-` lines in step 9, not as findings. Keep the list in your working context. Do not print it.
+7. **Normalize** the output into a numbered list with short IDs (first letter of the skill plus a number: `C1`, `C2`). One item each: severity mapped to `P1`-`P3` (P1 critical, P2 important, P3 polish; map high/medium/low or any other scale), the claim, the reason, and the node if given. Questions the critique raises (things to decide rather than things to fix) are written as `Q-` lines in step 9 (skipping ones a `Q-` line already asks), not as findings. Keep the list in your working context. Do not print it.
 
 8. **Filter by stage.**
    - `explore`: park every `P3` item, and any item about placeholder copy or numbers, in `files/<slug>/parked.md` (`memory-format`, Parked findings). They do not go to Figma.
    - `refine`: write everything.
    - `polish`, or the digest says the stage moved to `polish`: also read `parked.md` for this flow. Check each parked item against the digest's current descriptions: still true, add it to the list; no longer true, drop it. Remove both kinds from `parked.md`.
 
-9. **Write the findings to Figma.** For each item, allocate the `FD-` ID immediately before writing (use `nextFindingId`) and write a `Finding` component instance with `writeFinding`, status `open`, placed in the findings frame of the frame it is about (`<frame name> - Sidekick Findings 🤖`, directly below that frame). Pass the frame's node id as `anchorId`: the finding's `frame:` scope, or the reviewed frame when the scope is a flow or the file. Resolve the library first (`memory-format`, Findings, Finding library) and pass its key as `libraryKey`. If the `Sidekick` library is missing, do not build the component and do not write any finding: follow Missing library (`needs=library`) and stop. Then write the screens' `findings:` lines in the cache.
-    Also write each question from step 7 as a `Q-` line with `addEntry` (section `Open questions`, ID from `nextMemoryId(md, "Q")` read right before each write, columns `id | scope | question | opened | closed` as in `memory-format`): the scope line from step 6, the question as the critique put it, today's date, no `closed`. Skip a question that an open `Q-` line already asks.
+9. **Write the findings to Figma.** For each item, allocate the `FD-` ID immediately before writing (use `nextFindingId`) and write a `Finding` component instance with `writeFinding`, status `open`, placed in the findings frame of the frame it is about (`<frame name> - Sidekick Findings 🤖`, directly below that frame). Pass the frame's node id as `anchorId`: the finding's `frame:` scope, or the reviewed frame when the scope is a flow or the file. Resolve the key first (`memory-format`, Findings, Finding library; the Preflight already confirmed the library is enabled) and pass it as `libraryKey`. Only if `writeFinding` still throws `FINDING_LIBRARY_MISSING` (the key import failed), follow Missing library once and stop. Then write the screens' `findings:` lines in the cache.
+    Also write each question from step 7 as a `Q-` line with `addEntry` (section `Open questions`, ID from `nextMemoryId(md, "Q")` read right before each write, columns `id | scope | question | opened | closed` as in `memory-format`): the scope line from step 6, the question as the critique put it, today's date, no `closed`. Skip a question that any `Q-` line, open or closed, already asks (the same rule as the On hold guard in step 3, keyed on the `FD-` id).
 
 10. **Hand over.** One or two lines: how many findings are on the canvas below their frames and the highest severity, how many were parked until polish, and how many questions were added. The designer sets statuses on the cards in Figma, whenever they like; the next review catches up. Do not list the findings in chat and do not ask for triage.
     If the designer says in chat "FD-004 will do, FD-006 dismiss", flip the instances with `readFindings` and `updateFinding` (`accepted`: done, yes, will do; `dismissed`: no, skip; `deferred`: later). Never infer `accepted` from vague replies such as "fine" or "ok": leave those `open`. A reason the designer gives goes on the finding's `Reason`.
@@ -63,7 +63,7 @@ One silent pass: look, catch up, critique, write. The designer is never asked to
 11. **Status.** Update the flow's bullet in the `status` entry (`last_review`, `next`, `open_q`).
 
 12. **Stage line** (`memory-format`). Keep it current throughout. The review has four steps for the card's progress bar:
-    - at step 1: `stage=review`, `detail=looking at changes`, `progress=1/4`, `result=` (empty)
+    - at step 1, once the preflight passed and before loading `context`: `stage=review`, `detail=looking at changes`, `progress=1/4`, `result=` (empty)
     - at step 4: `detail=choosing review`, `progress=2/4`
     - at step 6: `detail=running <review name>`, `progress=3/4`
     - at step 9: `stage=triage`, `detail=writing findings to Figma`, `progress=4/4`
@@ -71,4 +71,4 @@ One silent pass: look, catch up, critique, write. The designer is never asked to
     - findings `Will do`: `stage=triage`, `detail=<n> changes to apply`
     - findings `Open` or `On hold`: `stage=triage`, `detail=<n> findings waiting in Figma`
     - nothing pending: `stage=idle`, `detail=` (empty)
-    Write `result=` with one sentence, display only. A review that produced findings: leave it empty. The "nothing changed" path: `Nothing changed since <last review date, e.g. 5 Nov>. <n> still open.` The "nothing new to review" path: `Nothing new to review here since <last review date>.` Use the real date and open count.
+    Write `result=` with one sentence, display only. A review that produced findings: leave it empty. `<date>` is the `last_review` date you read at step 5, before step 11 updated it (for example `5 Nov`), never today's date. The "nothing changed" path: `Nothing changed since <date>. <n> still open.`, where `<n>` is the number of findings still `Open`, `Will do` or `On hold` in scope. The "nothing new to review" path: `Nothing new to review here since <date>.`, with no count.
