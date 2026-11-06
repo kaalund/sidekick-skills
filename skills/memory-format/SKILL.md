@@ -292,7 +292,7 @@ result=
 
 Every write replaces the whole file, so read the existing one first and carry over every key you are not changing: `flow`, `open`, `p1` to `p3`, `f1` to `f3`, `last` and `result` (unless you are writing a new one). This holds for `start` too (a re-run on a file that already has findings must not wipe their counts). Only `progress` and `needs` are dropped, as described above, when the skill is no longer running or its blocker cleared (a blocker stop is the exception: it writes `needs` and leaves `progress` empty, see Preflight).
 
-Stage meanings: `start` setup and the first brief (`detail=brief interview` is the marker meaning setup is done and the library is present (the Preflight passed), and no interview follows; the Sidekick card uses it to say the designer can switch to auto mode, so only `start` writes it, and only after the Preflight and the library check passed); `review` a critique is being chosen or run; `triage` findings are waiting for the designer to decide or to apply (in chat or in Figma); `idle` nothing in progress (the line shows everything as passed).
+Stage meanings: `start` setup and the first brief (`detail=brief interview` is the marker meaning setup is done and the library is present (the Preflight passed), and no interview follows; the Sidekick card reads it as "onboarding in progress", so only `start` writes it, and only after the Preflight and the library check passed); `review` a critique is being chosen or run; `triage` findings are waiting for the designer to decide or to apply (in chat or in Figma); `idle` nothing in progress (the line shows everything as passed).
 
 ## Figma access
 
