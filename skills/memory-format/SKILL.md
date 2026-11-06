@@ -46,7 +46,7 @@ Under `## Brief`: `### file` and `### F-03`.
 
 - File brief keys: `purpose`, `users`, `goals`, `constraints`, `platform`, `brand`, `references`, `risks`.
 - Flow mini-brief keys: `for`, `who`, `done_when`.
-- A skipped answer is the literal `unknown`.
+- A skipped answer is the literal `unknown`. A value a skill guessed instead of being told ends in `(inferred)` (see Inferred content); `start` writes the file brief this way, and `context` writes a flow mini-brief's `for` and `who` this way when the designer skips the prompt. A designer's comment on a brief line wins over the `(inferred)` value.
 
 ### Change log card (`C-###`)
 
@@ -173,6 +173,7 @@ Seed file `~/Library/Application Support/Sidekick/seeds/<slug>.md`, written by t
 
 Skills work silently: they do not ask the designer to confirm a guess. Anything a skill guessed rather than saw or was told is marked:
 - a `why:` on a `C-` card ends in `(inferred)`;
+- a brief value the designer did not give (a file brief key, or a flow's `for` or `who`) ends in `(inferred)`;
 - a decision the designer did not state has `status: inferred`;
 - a finding a skill set to `Done` because the design looks fixed gets `Reason: Looks fixed (inferred, <date>)` with `Show reason` on.
 
@@ -271,7 +272,7 @@ result=
 
 Every write replaces the whole file, so read the existing one first and carry over every key you are not changing: `flow`, `open`, `p1` to `p3`, `f1` to `f3`, `last` and `result` (unless you are writing a new one). This holds for `start` too (a re-run on a file that already has findings must not wipe their counts). Only `progress` and `needs` are dropped, as described above, when the skill is no longer running or the library resolved.
 
-Stage meanings: `start` setup and brief interview (`detail=brief interview` means setup is done and the library is present; the Sidekick card uses it to say the designer can switch to auto mode, so only `start` writes it, and only after the library check passed); `review` a critique is being chosen or run; `triage` findings are waiting for the designer to decide or to apply (in chat or in Figma); `idle` nothing in progress (the line shows everything as passed).
+Stage meanings: `start` setup and the first brief (`detail=brief interview` is the marker meaning setup is done and the library is present, and no interview follows; the Sidekick card uses it to say the designer can switch to auto mode, so only `start` writes it, and only after the library check passed); `review` a critique is being chosen or run; `triage` findings are waiting for the designer to decide or to apply (in chat or in Figma); `idle` nothing in progress (the line shows everything as passed).
 
 ## Figma access
 

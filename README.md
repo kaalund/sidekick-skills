@@ -13,7 +13,7 @@ Choose user scope so it works from any directory. For development you can instea
 
 ## Commands
 
-- `/start` sets up the memory spec (and moves an older Memory page into it), interviews you for the project brief, and registers the file in the shared design folder.
+- `/start` sets up the memory spec (and moves an older Memory page into it), writes a first project brief from the Sidekick form and what it sees in the file (guesses are marked `(inferred)`, you correct them in the spec), and registers the file in the shared design folder.
 - `/review` looks at what changed since last time, catches the memory up, picks the critique that fits the flow's stage and runs it with scoped memory. Findings land on the canvas for triage in Figma; minor ones are parked during exploration.
 
 The skills keep a small state file (`files/<slug>.state` in the shared design folder) up to date; the Sidekick card reads it to show your stage and one button for the next step.
