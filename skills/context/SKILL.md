@@ -1,6 +1,6 @@
 ---
 name: context
-description: Internal helper for design-memory skills. Given a Figma node, resolves its flow chain (registering a flow on first use and asking once what it is for) and loads only the memory entries in scope. Load before any review or catch-up.
+description: Internal helper for design-memory skills. Given a Figma node, resolves its flow chain (registering a flow on first use and asking once what it is for) and loads only the memory entries in scope. Load before any review.
 ---
 
 # Design Context
@@ -9,7 +9,7 @@ Given a target node, work out which flow it belongs to and load only the memory 
 
 1. Load `resolve`, `memory-format` and `figma-use`. Get the target node ID from the `node-id` in a Figma URL (convert `-` to `:`), or from the current selection, or ask.
 
-2. **Find the memory.** `findMemorySpec`. When there is none but a legacy memory page exists, migrate it first (`memory-format`, Legacy memory page). When there is neither, say so and suggest `/start` instead of creating anything.
+2. **Find the memory.** `findMemorySpec`. When there is none but a legacy memory page exists, migrate it first (`memory-format`, Legacy memory page). When there is neither, say so and tell the designer to use Get started on the card instead of creating anything.
 
 3. **Flow chain.** Read the `flows` entry under `## Index` (`parseMemory`, `entry.lines`). With `use_figma`, walk the node's ancestors (`node.parent` up to the page). For each ancestor that is a section, or the page, check whether its ID is an anchor in the flow map. Collect matches from innermost to outermost as the flow chain.
 

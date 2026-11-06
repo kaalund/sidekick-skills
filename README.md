@@ -15,9 +15,8 @@ Choose user scope so it works from any directory. For development you can instea
 
 - `/start` sets up the memory spec (and moves an older Memory page into it), interviews you for the project brief, and registers the file in the shared design folder.
 - `/review` looks at what changed since last time, catches the memory up, picks the critique that fits the flow's stage and runs it with scoped memory. Findings land on the canvas for triage in Figma; minor ones are parked during exploration.
-- `/checkpoint` (Catch up on the card) brings the memory up to date without a critique: digest, change log, findings that look fixed.
 
-The skills keep a small state file (`files/<slug>.state` in the shared design folder) up to date; the Sidekick card reads it to show your stage and next options.
+The skills keep a small state file (`files/<slug>.state` in the shared design folder) up to date; the Sidekick card reads it to show your stage and one button for the next step.
 
 Internal skills: `memory-format` (the contract), `resolve` (file and folder lookup), `context` (scope and flow registration), `digest` (screen descriptions in the local cache `files/<slug>/`, what changed, the flow's stage).
 

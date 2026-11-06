@@ -60,7 +60,7 @@ Under `## Brief`: `### file` and `### F-03`.
 - nodes: 12:34 "Payment"
 ```
 
-Optional key `dismissed:`: one line of short topics for findings dismissed in a triage, each with a brief reason in parentheses when given or the decision id if promoted (`dismissed: Egenkapital focus states (Eufemia, D-001); touch targets under 44px`). It exists so later reviews do not re-raise them; keep it to topics, not ticket history.
+Optional key `dismissed:`: one line of short topics for findings dismissed in a triage, each with a brief reason in parentheses only when the designer gave one (`dismissed: Egenkapital focus states (Eufemia); touch targets under 44px`). It exists so later reviews do not re-raise them; keep it to topics, not ticket history.
 
 Write a `C-` card only when something happened: a design change, a dismissal, or a finding that landed. A catch-up with nothing to report writes no card; it only updates `last_checkpoint` in the index. Never write a card whose `changed` is just "no design changes".
 
@@ -96,7 +96,7 @@ Rules:
 - `Reason` is empty when `Show reason` is false. Set `Show reason` to true whenever a reason is written; if the designer toggles it on and fills `Reason` in Figma, that counts as the reason.
 - Property keys carry a suffix (`ID#3997:105`). Read them by stripping `/#.*$/`; variant properties are keyed by plain name.
 - To change a finding, change properties on the instance. Never detach it and never recreate it.
-- **Pruning.** Findings are a working list, not a history. `Dismissed` and `Done` are transient: the designer sets them in Figma (or says them in chat), and the next sync removes those instances (see `review` step 11) with `removeFinding`, which also removes a findings frame that is left empty. Only `Open`, `Will do` and `On hold` persist. What survives is the digest on the change log card and, for dismissals that generalize, a decision.
+- **Pruning.** Findings are a working list, not a history. `Dismissed` and `Done` are transient: the designer sets them in Figma (or says them in chat), and the next review removes those instances (see `review` step 3) with `removeFinding`, which also removes a findings frame that is left empty. Only `Open`, `Will do` and `On hold` persist. What survives is the digest on the change log card.
 - **Placement.** The anchor is the finding's `frame:` scope, or the reviewed frame when the scope is `flow:` or `file`. The findings frame goes into the anchor's parent when that is a page or section, otherwise onto the page, aligned to the anchor's left edge and 16px below it. `writeFinding` finds it by its exact name among that parent's children and creates it when it is missing, so never rename it, and never make a second one for the same frame. If the anchor frame is renamed, the next finding starts a new findings frame and the old one keeps its findings. Findings written by older versions sit loose below their frame; leave them where they are (they are still read and updated like the others). `readFindings`, `updateFinding` and `nextFindingId` scan the instances by name on every page, so moving a finding in Figma is fine.
 - **Finding library.** The `Finding` component set lives in the published `Sidekick` Figma library. Skills only ever import it and make instances; they never build it (the one exception is `build-finding-component`, below). Resolve the key like this, before the first `writeFinding` of a run:
   1. Use `findingComponentKey` from the config if it is there.
@@ -104,7 +104,7 @@ Rules:
   3. Otherwise call `get_libraries` for the file, every time you run this check, even when an earlier call in this conversation said `Sidekick` was missing: the designer may have enabled it since, and a Retry is exactly that case. Never reuse an earlier result. `Sidekick` counts as enabled only when it is in `libraries_added_to_file`; if it is only under the libraries available to add, or absent, go to the missing-library steps below.
   4. Otherwise call `search_design_system` with `{entity: "component", query: "Finding"}` and `includeLibraryKeys: [<Sidekick library key>]`. Take the component set named exactly `Finding`, and save its key in the config as `findingComponentKey` so the lookup happens once.
   5. Pass the key to `writeFinding` as `libraryKey`. If the import throws, or step 4 finds no `Finding` set, go to the missing-library steps.
-- **Missing library.** Never build the component, and never write a finding without it. Write the state file with `needs=library`, `detail=enable the Sidekick library in Figma`, `actions=Retry|<the command you were started with, without a link, e.g. /design-memory:review ux>` (the card's Retry runs it, so the skill that stopped runs again; `start` writes `Retry|/design-memory:start`), empty `progress`, and copy every other key over. Tell the designer in one or two lines: "The Sidekick library isn't enabled in this file. In Figma, open Assets, then Libraries, and turn on Sidekick. Then press Retry on the card." Stop there. Only when the designer says they cannot enable it (no access, or it is not offered) point them to `/design-memory:build-finding-component`, which builds a local copy after asking them to confirm. Any skill that rewrites the state file once the library resolves leaves `needs` out.
+- **Missing library.** Never build the component, and never write a finding without it. Write the state file with `needs=library`, `detail=enable the Sidekick library in Figma`, empty `progress`, and copy every other key over (the card's Retry re-runs `/design-memory:start` when `stage` is `start`, otherwise `/design-memory:review`, so no command is written). Tell the designer in one or two lines: "The Sidekick library isn't enabled in this file. In Figma, open Assets, then Libraries, and turn on Sidekick. Then press Retry on the card." Stop there. Only when the designer says they cannot enable it (no access, or it is not offered) point them to `/design-memory:build-finding-component`, which builds a local copy after asking them to confirm. Any skill that rewrites the state file once the library resolves leaves `needs` out.
 - Existing local `Finding` sets and instances (from older files) stay valid: `findingSet` falls back to a local set only when it already exists.
 
 **Legacy findings.** Older files may hold findings as one-line text cards (`FD-014 | visual | P2 | frame:12:34 | claim | dismissed | reason | 2026-10-12`, columns `id | skill | severity | scope | claim | status | reason | date`). Keep reading them as a fallback via `readFindings`. Do not rewrite them unless the designer asks; new findings are always instances.
@@ -118,7 +118,7 @@ Open question (`Q-###`), a task-list line directly under `## Open questions` (no
 - [x] Q-008 | file | Which approval flow applies? | 2026-10-10 | 2026-10-12
 ```
 
-Columns: `id | scope | question | opened | closed`. An open question is `- [ ]` with no `closed` column; closing it ticks the box (`- [x]`) and appends the closing date. A deferred finding also gets a `Q-###` line whose question text starts with the finding id.
+Columns: `id | scope | question | opened | closed`. An open question is `- [ ]` with no `closed` column; closing it ticks the box (`- [x]`) and appends the closing date. A deferred finding (`On hold`) also gets a `Q-###` line whose question text starts with the finding id; write it once per finding, so look for an existing `Q-` line starting with that id before adding one. `review` step 9 also writes the critique's questions as `Q-` lines.
 
 ### Index entries
 
@@ -255,23 +255,23 @@ f1=12:345
 f2=12:346
 f3=12:350
 last=UX critique
-actions=UX critique|/design-memory:review ux;Visual critique|/design-memory:review visual
+result=
 ```
 
 - `flow`: the flow in scope as `<id> <name>`, or empty.
-- `stage`: one of `start`, `review`, `triage`, `fix`, `checkpoint`, `idle`.
+- `stage`: one of `start`, `review`, `triage`, `idle`. Older state files may contain `fix`, `checkpoint`, `init`, `handoff` or `export`; the app maps them, so a skill must never write them.
 - `detail`: a short phrase for what is happening right now (max ~40 chars), or empty.
 - `open`: count of findings in scope with status Open, Will do or On hold (from `readFindings`); `0` or empty if unknown.
 - `p1`, `p2`, `p3`: the same open findings counted by severity (`P1` critical, `P2` important, `P3` polish), so they add up to `open`. Set them together with `open`; `0` or empty if unknown.
 - `f1`, `f2`, `f3`: the Figma node id of the first open finding of each severity (P1, P2, P3), which the card's severity pills link to: status `Open` only, lowest `FD-` number. Written as `12:345`. Empty when no finding of that severity is open. Set them together with `p1` to `p3`.
 - `last`: the friendly name of the review that ran last (the catalog `name`, e.g. `UX critique`), so the card can say "UX critique done". Only `review` sets it; every other skill that writes the file copies it over.
 - `progress`: `<step>/<total>` while a skill runs a known number of steps (`2/3`), shown as a bar and "step 2 of 3". Empty when nothing is running or the steps are unknown.
-- `needs`: `library` when a skill stopped because the `Sidekick` Figma library is not enabled in the file (see Findings, Missing library); the card then asks the designer to enable it. Omit the key otherwise.
-- `actions`: the next-step offers shown as buttons in the Sidekick card, as `label|command` pairs separated by `;` (labels have no `|` or `;`; commands start with `/design-memory:`; at most three; empty while a skill is running). Example: `UX critique|/design-memory:review ux;Checkpoint|/design-memory:checkpoint`.
+- `result`: one plain sentence the card shows on its Ready and Findings states (for example `Nothing changed since 5 Nov. 15 still open.`), display only. Empty while a skill runs and when there is nothing to say. Only `review` sets it; other skills copy it over.
+- `needs`: `library` or a short blocker name when a skill stopped on something the designer must fix, with `detail` carrying the one-line fix. `library` means the `Sidekick` Figma library is not enabled in the file (see Findings, Missing library) and has its own card; any other value shows a generic "needs a fix" card with `detail` as the text. Omit the key otherwise.
 
-Every write replaces the whole file, so read the existing one first and carry over every key you are not changing: `flow`, `open`, `p1` to `p3`, `f1` to `f3`, `last`, and `actions` unless you are offering new ones. This holds for `start` too (a re-run on a file that already has findings must not wipe their counts). Only `progress` and `needs` are dropped, as described above, when the skill is no longer running or the library resolved.
+Every write replaces the whole file, so read the existing one first and carry over every key you are not changing: `flow`, `open`, `p1` to `p3`, `f1` to `f3`, `last` and `result` (unless you are writing a new one). This holds for `start` too (a re-run on a file that already has findings must not wipe their counts). Only `progress` and `needs` are dropped, as described above, when the skill is no longer running or the library resolved.
 
-Stage meanings: `start` setup and brief interview (`detail=brief interview` means setup is done and the library is present; the Sidekick card uses it to say the designer can switch to auto mode, so only `start` writes it, and only after the library check passed); `review` a critique is being chosen or run; `triage` findings are waiting for the designer to decide (in chat or in Figma); `fix` accepted findings are waiting to be applied in the design; `checkpoint` catching up the memory without a critique (digest, change log, pruning); `idle` nothing in progress (the line shows everything as passed).
+Stage meanings: `start` setup and brief interview (`detail=brief interview` means setup is done and the library is present; the Sidekick card uses it to say the designer can switch to auto mode, so only `start` writes it, and only after the library check passed); `review` a critique is being chosen or run; `triage` findings are waiting for the designer to decide or to apply (in chat or in Figma); `idle` nothing in progress (the line shows everything as passed).
 
 ## Figma access
 

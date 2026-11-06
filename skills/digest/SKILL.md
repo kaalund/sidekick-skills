@@ -1,6 +1,6 @@
 ---
 name: digest
-description: Internal helper for design-memory skills. Looks at the frames in scope, compares them with the local cache of screen descriptions, classifies each frame (edit, variant, state, new), infers the flow's stage, updates the cache and returns a change list, a short summary and a compact package for critique skills. Called by review and checkpoint. Not for direct use.
+description: Internal helper for design-memory skills. Looks at the frames in scope, compares them with the local cache of screen descriptions, classifies each frame (edit, variant, state, new), infers the flow's stage, updates the cache and returns a change list, a short summary and a compact package for critique skills. Called by review. Not for direct use.
 ---
 
 # Design Digest
