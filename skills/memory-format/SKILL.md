@@ -13,7 +13,7 @@ The memory is one Figma spec (a native `SPEC_BLOCK` document, GitHub-flavoured m
 
 The document is the H1 title block, then five H2 sections in this order: `## Index`, `## Brief`, `## Decisions`, `## Change log`, `## Open questions`. Never name an H3 like a section.
 
-**Specs must be on.** Before the first `figma.spec.*` call of a run, call `whoami` and check `specs_enabled: true` on the plan that owns the file (when the account has several plans and you cannot tell which owns the file, stop and say so). If Specs is not enabled, memory cannot be written: that is the `specs` check of the Preflight, which stops the run (`review` and `start` run it before anything else).
+**Specs must be on.** Before the first `figma.spec.*` call of a run, call `whoami` and check `specs_enabled: true` on the plan that owns the file (when the account has several plans and you cannot tell which owns the file, that is the `specs` blocker too, with `detail=Couldn't tell which Figma plan owns this file`). If Specs is not enabled, memory cannot be written: that is the `specs` check of the Preflight, which stops the run (`review` and `start` run it before anything else).
 
 ## Entries
 
@@ -104,7 +104,7 @@ Rules:
   3. Otherwise call `get_libraries` for the file, every time you run this check, even when an earlier call in this conversation said `Sidekick` was missing: the designer may have enabled it since, and a Retry is exactly that case. Never reuse an earlier result. `Sidekick` counts as enabled only when it is in `libraries_added_to_file`; if it is only under the libraries available to add, or absent, go to the missing-library steps below.
   4. Otherwise call `search_design_system` with `{entity: "component", query: "Finding"}` and `includeLibraryKeys: [<Sidekick library key>]`. Take the component set named exactly `Finding`, and save its key in the config as `findingComponentKey` so the lookup happens once.
   5. Pass the key to `writeFinding` as `libraryKey`. If the import throws, or step 4 finds no `Finding` set, go to the missing-library steps.
-- **Missing library.** Never build the component, and never write a finding without it. Write the state file with `needs=library`, `detail=Enable the Sidekick library: Assets, Libraries, Sidekick`, empty `progress`, and copy every other key over, as in Preflight (the card's Retry re-runs `/design-memory:start` when `stage` is `start`, otherwise `/design-memory:review`, so no command is written). Tell the designer in one or two lines: "The Sidekick library isn't enabled in this file. In Figma, open Assets, then Libraries, and turn on Sidekick. Then press Retry on the card." Stop there. Only when the designer says they cannot enable it (no access, or it is not offered) point them to `/design-memory:build-finding-component`, which builds a local copy after asking them to confirm. Any skill that rewrites the state file once the library resolves leaves `needs` out.
+- **Missing library.** Never build the component, and never write a finding without it. Write the state file with `needs=library`, `detail=` the `library` row's sentence from Preflight, empty `progress`, and copy every other key over, as in Preflight (the card's Retry re-runs `/design-memory:start` when `stage` is `start`, otherwise `/design-memory:review`, so no command is written). Tell the designer in one or two lines: "The Sidekick library isn't enabled in this file. In Figma, open Assets, then Libraries, and turn on Sidekick. Then press Retry on the card." Stop there. Only when the designer says they cannot enable it (no access, or it is not offered) point them to `/design-memory:build-finding-component`, which builds a local copy after asking them to confirm. Any skill that rewrites the state file once the library resolves leaves `needs` out.
 - Existing local `Finding` sets and instances (from older files) stay valid: `findingSet` falls back to a local set only when it already exists.
 
 **Legacy findings.** Older files may hold findings as one-line text cards (`FD-014 | visual | P2 | frame:12:34 | claim | dismissed | reason | 2026-10-12`, columns `id | skill | severity | scope | claim | status | reason | date`). Keep reading them as a fallback via `readFindings`. Do not rewrite them unless the designer asks; new findings are always instances.
@@ -138,11 +138,11 @@ Under `## Index`, three entries:
 |---|---|---|
 | `specs` | `whoami` shows `specs_enabled: true` on the plan that owns the file (see Memory spec, Specs must be on) | `Turn on Figma Specs for this file's plan` |
 | `login` | the Figma MCP session is logged in: no call fails with an authentication error, and `whoami` returns a user | `Log in to Figma in Raicode (run /mcp)` |
-| `memory` | a memory spec exists (`findMemorySpec`), or a legacy memory page that can be migrated. `start` skips this check: it creates the spec | `Run Get started on the card to set up the memory` |
-| `library` | the `Sidekick` library is enabled in the file: a FRESH `get_libraries` call every time (see Findings, Finding library: never reuse an earlier result, and `Sidekick` counts only when it is in `libraries_added_to_file`). Call it even when the config has a `findingComponentKey`. Only a file that already holds a local `Finding` set on a page (older files, Finding library rule 2) skips this check | `Enable the Sidekick library: Assets, Libraries, Sidekick` |
+| `memory` | a memory spec exists (`findMemorySpec`), or a legacy memory page that can be migrated. `start` skips this check: it creates the spec | `The memory spec is missing: run /design-memory:start in the terminal` |
+| `library` | the `Sidekick` library is enabled in the file: a FRESH `get_libraries` call every time (see Findings, Finding library: never reuse an earlier result, and `Sidekick` counts only when it is in `libraries_added_to_file`). Call it even when the config has a `findingComponentKey`. Only a file that already holds a local `Finding` set on a page (older files, Finding library rule 2) skips this check; that does not change the order of the Finding library rules, where the config key (rule 1) still wins when the key is resolved | `Enable the Sidekick library: Assets, Libraries, Sidekick` |
 | `empty-target` | `review` only: the target node exists and is not an empty frame (it has children or an image fill) | `Select a frame with content, then press Review` |
 
-If a check cannot run because an earlier one failed (no login, so no `get_libraries`), count it as not checked and list it as unchecked in the message.
+`whoami` also tells you about the login: an authentication error (or no user) on `whoami` is `login`, not `specs`, and `login` takes precedence over `specs`. When both fail only because of that one `whoami` failure, report `login` alone (the `specs` check could not run). In general, a check that cannot run because an earlier one failed (no login, so no `get_libraries`) counts as not checked: list it as unchecked in the message, and it is never the `needs` value.
 
 When every check passes, carry on. When any fails, stop before touching Figma or the cache:
 
@@ -281,7 +281,7 @@ result=
 
 - `flow`: the flow in scope as `<id> <name>`, or empty.
 - `stage`: one of `start`, `review`, `triage`, `idle`. Older state files may contain `fix`, `checkpoint`, `init`, `handoff` or `export`; the app maps them, so a skill must never write them.
-- `detail`: a short phrase for what is happening right now (max ~40 chars), or empty.
+- `detail`: a short phrase for what is happening right now (max ~70 chars), or empty.
 - `open`: count of findings in scope with status Open, Will do or On hold (from `readFindings`); `0` or empty if unknown.
 - `p1`, `p2`, `p3`: the same open findings counted by severity (`P1` critical, `P2` important, `P3` polish), so they add up to `open`. Set them together with `open`; `0` or empty if unknown.
 - `f1`, `f2`, `f3`: the Figma node id of the first open finding of each severity (P1, P2, P3), which the card's severity pills link to: status `Open` only, lowest `FD-` number. Written as `12:345`. Empty when no finding of that severity is open. Set them together with `p1` to `p3`.
