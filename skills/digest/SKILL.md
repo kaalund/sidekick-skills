@@ -13,7 +13,7 @@ Input from the caller: `fileKey`, `slug`, `folderPath`, the target node id, and 
 
 2. **Frames in scope.** The target node when it is a frame. When it is a section or a page, its top-level frames, minus Sidekick's own findings frames (`… - Sidekick Findings 🤖`) and any spec (the memory spec is a `SPEC_BLOCK`, never a frame in scope). Call `get_metadata` once for the target and build a fingerprint per frame: `nodeId|name|childCount|WxH`.
 
-3. **Load the cache** with the Read tool: `files/<slug>/fingerprint`, `files/<slug>/flows/<flowId>.md`, and `files/<slug>/screens/<id>.md` for every frame in scope. A missing file is empty. When the cache has no fingerprint line for the flow, read the legacy `memory/index/fingerprint` card (on a legacy memory page, if one still exists) or the newest `fingerprint:` on a `C-` card once as the baseline.
+3. **Load the cache** with the Read tool: `<slug>/fingerprint`, `<slug>/flows/<flowId>.md`, and `<slug>/screens/<id>.md` for every frame in scope. A missing file is empty. When the cache has no fingerprint line for the flow, read the legacy `memory/index/fingerprint` card (on a legacy memory page, if one still exists) or the newest `fingerprint:` on a `C-` card once as the baseline.
 
 4. **Sort the frames.**
    - Same id, same fingerprint, description exists: **unchanged**. Do not describe it again.

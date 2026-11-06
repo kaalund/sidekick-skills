@@ -172,20 +172,20 @@ Allocate immediately before writing by reading the spec and taking the highest n
 
 ## Config
 
-`<workspaceFolder>/.design-memory/config.json` (in the shared design folder, next to `files/`):
+`<workspaceFolder>/.design-memory/config.json` (in the shared design folder, next to the `<slug>/` folders):
 
 ```json
 {
   "version": 1,
-  "workspaceFolder": "/Users/peter/design-workspace",
+  "workspaceFolder": "/Users/peter/sidekick-workspace",
   "files": {
-    "FIGMAFILEKEY": { "name": "Checkout redesign", "path": "/Users/peter/design-workspace", "slug": "checkout-redesign" }
+    "FIGMAFILEKEY": { "name": "Checkout redesign", "path": "/Users/peter/sidekick-workspace", "slug": "checkout-redesign" }
   },
   "catalog": []
 }
 ```
 
-`workspaceFolder` is the shared design folder: one git repo for all Figma files, holding `.claude/settings.json` (the enabled design plugins) and a `files/` folder with `<slug>.state` (the stage line) per Figma file. The brief and goals are not kept on disk: the Figma file's memory spec is the only copy. Every entry has a `slug`; an entry without one is ignored. The `catalog` array is seeded by `review`. Optional: `findingComponentKey`, the key of the published `Finding` component set. Skills fill it in after the first lookup in the `Sidekick` library (see Findings, Finding library).
+`workspaceFolder` is the shared design folder: one git repo for all Figma files, holding `.claude/settings.json` (the enabled design plugins) and one `<slug>/` folder per Figma file, holding `state` (the stage line) and the local cache. The brief and goals are not kept on disk: the Figma file's memory spec is the only copy. Every entry has a `slug`; an entry without one is ignored. The `catalog` array is seeded by `review`. Optional: `findingComponentKey`, the key of the published `Finding` component set. Skills fill it in after the first lookup in the `Sidekick` library (see Findings, Finding library).
 
 Seed file `~/Library/Application Support/Sidekick/seeds/<slug>.md`, written by the Sidekick card (in its own support folder, not the design folder) before it launches `start`, and deleted by Sidekick once the stage line says `brief written`: a `---` header with `fileKey`, `name`, `slug` and `url`, then one `##` section per answer (Purpose and problem, Users and audience, Goals and success, Scope of this file, Platform, Brand). `unknown` means the designer skipped the question. Skills only read it, and only by its exact path.
 
@@ -201,16 +201,15 @@ What changed on the canvas is evidence and is not marked. Text the designer wrot
 
 ## Local cache
 
-Machine state that can be rebuilt from the Figma file at any time. It lives in the shared design folder next to the state file, is never shown in the memory spec, and is per machine: two designers on one file each build their own. Only `digest` writes it; other skills read it.
+Machine state that can be rebuilt from the Figma file at any time. It lives in the slug folder next to the state file, is never shown in the memory spec, and is per machine: two designers on one file each build their own. Only `digest` writes it; other skills read it.
 
 ```
-<folderPath>/files/
-├── <slug>.state                 stage line (the Sidekick card reads it)
-└── <slug>/
-    ├── fingerprint              one line per flow, same format as the legacy index card
-    ├── flows/F-01.md            one file per flow
-    ├── screens/2002-1196.md     one file per described frame, named by node id with ':' as '-'
-    └── parked.md                minor findings held back until polish
+<folderPath>/<slug>/
+├── state                        stage line (the Sidekick card reads it; not cache)
+├── fingerprint                  one line per flow, same format as the legacy index card
+├── flows/F-01.md                one file per flow
+├── screens/2002-1196.md         one file per described frame, named by node id with ':' as '-'
+└── parked.md                    minor findings held back until polish
 ```
 
 Write the files with the Write tool and read them with the Read tool, never with shell commands. Create folders as needed. If a cache file is missing or unreadable, treat it as empty: the next `digest` rebuilds it.
@@ -262,7 +261,7 @@ updated: 2026-11-04
 
 The Sidekick card shows where the designer is in the workflow. It reads a plain-text state file that skills keep up to date. Updating it is cosmetic: never ask permission, never mention it, and ignore any write failure.
 
-Write the whole file (overwrite, one `key=value` per line, no quotes, single-line values) to `<folderPath>/files/<slug>.state` (create `files/` if missing):
+Write the whole file (overwrite, one `key=value` per line, no quotes, single-line values) to `<folderPath>/<slug>/state` (create `<slug>/` if missing):
 
 ```
 flow=F-03 Cart
