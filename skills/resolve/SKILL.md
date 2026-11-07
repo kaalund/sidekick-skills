@@ -7,6 +7,8 @@ description: Internal helper for design-memory skills. Resolves which Figma file
 
 Work out which Figma file and which local folder this session is about. Keep it quick: ask only what you cannot find.
 
+Run every step on every call, even when you ran `resolve` earlier in this conversation: the registry, the slug and the folder may have changed since (a deleted `.design-memory/`, a renamed folder, another file in the same session). Never reuse a slug or a folder from earlier in the conversation, and read the config again.
+
 1. Load `memory-format`.
 
 2. **Figma file key.** Take it from, in order: a Figma URL the user gave; otherwise ask for the URL. The key is the path segment after `/design/`. For `/design/<fileKey>/branch/<branchKey>/...` URLs use the branch key.
