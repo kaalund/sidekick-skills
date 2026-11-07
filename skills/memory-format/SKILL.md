@@ -11,7 +11,9 @@ The single contract for every design-memory skill. If a skill and this file disa
 
 The memory is one Figma spec (a native `SPEC_BLOCK` document, GitHub-flavoured markdown) named exactly `🤖 Agentic memory.md`, on the page with the designs. It sits 80px to the left of the journey section it relates to, top aligned with it, so the designer reads it next to the flows. It replaces the old `🤖 Agentic Memory` page and its seven frames (see Legacy memory page). Skills read and write it only through `figma.spec.*` (helpers below), never through text nodes.
 
-The document is the H1 title block, then five H2 sections in this order: `## Index`, `## Brief`, `## Decisions`, `## Change log`, `## Open questions`. Never name an H3 like a section.
+The document is the H1 title block, then five H2 sections in this order: `## Open questions`, `## What I know`, `## Brief`, `## Decisions`, `## Change log`. Never name an H3 like a section.
+
+The spec is for the designer to read, so it holds only what a designer needs: what is waiting for them (open questions first, so they are never buried), what the agent understands about the file and where it is blind (`What I know`), the brief, the decisions and a short history. No node ids, folder paths, fingerprints or counts the cache already holds: machine state lives in the local cache (see Local cache). A frame is named in words and, where a pointer helps, linked with `[name](https://www.figma.com/design/<fileKey>/?node-id=<id with ':' replaced by '-'>)`.
 
 **Specs must be on.** Before the first `figma.spec.*` call of a run, call `whoami` and check `specs_enabled: true` on the plan that owns the file (when the account has several plans and you cannot tell which owns the file, that is the `specs` blocker too, with `detail=Couldn't tell which Figma plan owns this file`). If Specs is not enabled, memory cannot be written: that is the `specs` check of the Preflight, which stops the run (`review` and `start` run it before anything else).
 
@@ -57,12 +59,12 @@ Under `## Brief`: `### file` and `### F-03`.
 - scope: flow:F-03
 - changed: Moved coupon field below the total
 - why: Likely to reduce hesitation before payment (inferred)
-- nodes: 12:34 "Payment"
+- nodes: [Payment](https://www.figma.com/design/FILEKEY/?node-id=12-34)
 ```
 
-Optional key `dismissed:`: one line of short topics for findings dismissed in a triage, each with a brief reason in parentheses only when the designer gave one (`dismissed: Egenkapital focus states (Eufemia); touch targets under 44px`). It exists so later reviews do not re-raise them; keep it to topics, not ticket history.
+Keep `changed` to one sentence and `nodes` to the few frames a designer would open, as links with the frame's name (no raw ids). What else changed is in the local screen descriptions. Never cite an `FD-` id in a card: findings are pruned, so the reference dies; name the topic instead. Optional key `dismissed:`: one line of short topics for findings dismissed in a triage, each with a brief reason in parentheses only when the designer gave one (`dismissed: Egenkapital focus states (Eufemia); touch targets under 44px`). It exists so later reviews do not re-raise them; keep it to topics, not ticket history.
 
-Write a `C-` card only when something happened: a design change, a dismissal, or a finding that landed. A catch-up with nothing to report writes no card; it only updates `last_checkpoint` in the index. Never write a card whose `changed` is just "no design changes".
+Write a `C-` card only when something happened: a design change, a dismissal, or a finding that landed. A catch-up with nothing to report writes no card and changes nothing in the spec. Never write a card whose `changed` is just "no design changes".
 
 The structural fingerprint does not live on `C-` cards (it is machine state, not history). It lives in the local cache (see Local cache). Older files may still have a `memory/index/fingerprint` card on a legacy memory page, and older `C-` cards a `fingerprint:` line; read the newest of those only as a fallback when the cache has no fingerprint for the flow, and never write them again.
 
@@ -111,24 +113,55 @@ Rules:
 
 ### Open questions (one checkbox line each)
 
-Open question (`Q-###`), a task-list line directly under `## Open questions` (no heading, no sub-bullets), newest first:
+`## Open questions` is the first section, so what waits for the designer is the first thing they see. Open question (`Q-###`), a task-list line directly under the heading (no sub-bullets), newest first:
 
 ```
 - [ ] Q-009 | flow:F-03 | FD-016 deferred: error copy needs content review | 2026-10-12
+```
+
+Columns: `id | scope | question | opened | closed`. An open question is `- [ ]` with no `closed` column. When the designer ticks the box in Figma, the next `review` catch-up appends the closing date and moves the line under an `### Answered` heading at the bottom of the section (create the heading when it is missing), so the open ones stay on top:
+
+```
+### Answered
+
 - [x] Q-008 | file | Which approval flow applies? | 2026-10-10 | 2026-10-12
 ```
 
-Columns: `id | scope | question | opened | closed`. An open question is `- [ ]` with no `closed` column; closing it ticks the box (`- [x]`) and appends the closing date. A deferred finding (`On hold`) also gets a `Q-###` line whose question text starts with the finding id; `review` step 3 writes it, in the pass that finds the finding `On hold`, not later. Write it once per finding, so look for an existing `Q-` line (open or closed) starting with that id before adding one. `review` step 9 also writes the critique's questions as `Q-` lines.
+An empty section means nothing is open; write no placeholder line. Never cite a pruned `FD-` id in a question except the deferred-finding line below, which lives while its finding is `On hold`. A deferred finding (`On hold`) also gets a `Q-###` line whose question text starts with the finding id; `review` step 3 writes it, in the pass that finds the finding `On hold`, not later. Write it once per finding, so look for an existing `Q-` line (open or closed, in either place) starting with that id before adding one. `review` step 9 also writes the critique's questions as `Q-` lines.
 
-### Index entries
+### What I know
 
-Under `## Index`, three entries:
+The agent's awareness of the file, written in plain sentences for the designer, and rewritten by `review` after each pass (it is a status, not a log). Three entries under `## What I know`:
 
-- `### project`: keys `intent`, `last_checkpoint`, `workspace_folder`.
-- `### flows`: one bullet per flow, `- F-03 | Checkout | section:123:456 | parent:-`. Anchor kind is `page` or `section`. Parent is `-` or another flow id.
-- `### status`: one bullet per flow, `- F-03 | last_review: cognitive-load 2026-10-10 | next: visual-critique | open_q: 3`.
+- `### Flows`: one bullet per flow, `- **F-03 Checkout** (section "Checkout"): <what it is for>. Looks like <stage> (inferred), from <evidence>. Last reviewed with <review> on <date>; next up: <review>. <n> findings open, <n> questions.` The parentheses name the anchor in words: `section "<name>"` or `loose frames`, then `, inside F-01` for a nested flow. Drop the review sentence before the first review. Node ids stay in the local flow file.
+- `### How I read this page`: how the designer structures the page, from the first-level read (see Page structure). One bullet per role, only roles that occur, the node names in italics: `- **Current:** *V0.2.1*`, `- **Earlier rounds** (left out of reviews, still read for what changed): *v00*, *v01*`, `- **Not a flow:** *app icon*`, `- **Unclear** (included for now): *Frame 12*`. A designer who moves a name to another bullet, or comments on one, has corrected the read: that wins over the local `structure` file and is never re-guessed.
+- `### Not covered yet`: one bullet per gap, in plain words ("5 frames in *2. Get started* are not described yet", "19 loose images in *v01* look like screenshots and were skipped"), written from the digest's gaps, plus one line `<n> minor items are held back until polish` when `parked.md` has items for the flow. `- Nothing that I know of.` when there are none.
 
-`flows` and `status` bullets are not `key: value` pairs. Read them as lines (`entry.lines` in `parseMemory`), and change one with `replaceLines`.
+`### Flows` bullets are not `key: value` pairs. Read them as lines (`entry.lines` in `parseMemory`), and change one with `replaceLines`. A bullet starts `- **<flowId> <name>**`. The flow's registry lives in the local cache (`flows/<flowId>.md`: `anchor`, `parent`); the bullet is the shared, readable copy, and `context` rebuilds a missing local flow file from it.
+
+### Page structure
+
+Designers lay a page out in their own way: a flow can be a section, or a set of loose frames, and a page often holds earlier rounds, references and unrelated pieces next to the live work. A page is not a flow. `context` reads the structure once per page and records a role per top-level node:
+
+- `current`: the live work.
+- `earlier:<name>`: an earlier round of another node (same screens, older). Left out of a review's scope, but still read to see what changed. Selecting one explicitly reviews it anyway.
+- `journey`: a self-contained flow, current or not yet compared.
+- `reference`: not a flow (an icon page, notes, loose images).
+- `unclear`: the cues do not agree. Stays in scope.
+
+The read is first level only: one `use_figma` script returns, per top-level node of the page, `id|type|name|x,y|WxH|childCount`, never a tree and never `get_metadata` on a page. With more than 80 top-level nodes, group a run of the same type with generic names (`Frame 12`) into one row with a count. The cues are combined and none decides alone: page names (`Old`, `Archive`, `Current`), version-like node names (`v0`, `v01`, `V0.2.1`, `old`, `final`), stacking order (rounds are often laid out in one direction, the newest last), size and node type, child count (a section of 19 rectangles is screenshots), and whether names repeat. When the cues disagree or names are generic, the role is `unclear`. Never exclude a node on a single cue.
+
+Local `structure` file, written by `context`:
+
+```
+page: 0:1
+read: 2026-11-07
+pages: 207:612 Old|earlier:Current; 80:1267 app icon|reference
+131:128|SECTION|V0.2.1|current|-469,4934|2860x970|3
+5:690|SECTION|v00|earlier:V0.2.1|-337,1451|5108x998|2
+```
+
+When the ids and names of the first level are unchanged since `read`, reuse it and read nothing; otherwise classify only the new or renamed nodes. The `### How I read this page` bullets are written by `context` when the read changed, and are the shared copy: when they disagree with the local file, they win.
 
 ## Preflight
 
@@ -154,7 +187,7 @@ When every check passes, carry on. When any fails, stop before touching Figma or
 
 Older files keep their memory on a page named `🤖 Agentic Memory` (or `Memory (agent-maintained)`) with seven frames, `00 Index` to `06 Components`, and cards as text nodes named `memory/<topic>/<ID>` with plain `key: value` lines. When a run finds the legacy page and no memory spec, it migrates first, silently (`context` and `start` do this):
 
-1. Create the spec (`createMemorySpec`) with the five sections and write each card as an entry: the `id:` and `title:` lines become the heading, every other `key: value` line becomes a bullet, continuation lines become nested bullets, the `memory/index/flows` and `status` lines become bullets, `memory/brief/<scope>` becomes `### <scope>` under `## Brief`, and `04 Findings` text cards are not copied (they stay readable through `readFindings`). The legacy `memory/index/fingerprint` card is not copied either: write it to the local cache's `fingerprint` file if the cache has none.
+1. Create the spec (`createMemorySpec`) with the five sections and write each card as an entry: the `id:` and `title:` lines become the heading, every other `key: value` line becomes a bullet, continuation lines become nested bullets, the `memory/index/flows` lines become `### Flows` bullets (their anchors and the `memory/index/status` lines go to the local flow files), `memory/brief/<scope>` becomes `### <scope>` under `## Brief`, and `04 Findings` text cards are not copied (they stay readable through `readFindings`). The legacy `memory/index/fingerprint` card is not copied either: write it to the local cache's `fingerprint` file if the cache has none.
 2. Never delete or edit the legacy page. Tell the designer in one line: "Moved the memory to the 🤖 Agentic memory.md spec next to your flows. The old page is untouched and can be deleted."
 3. From then on only the spec is read and written. The legacy page is ignored, apart from the fingerprint fallback and legacy findings above.
 
@@ -185,7 +218,7 @@ Allocate immediately before writing by reading the spec and taking the highest n
 }
 ```
 
-`workspaceFolder` is the shared design folder: one git repo for all Figma files, holding `.claude/settings.json` (the enabled design plugins) and one `<slug>/` folder per Figma file, holding `state` (the stage line) and the local cache. The brief and goals are not kept on disk: the Figma file's memory spec is the only copy. Every entry has a `slug`; an entry without one is ignored. The `catalog` array is seeded by `review`. Optional: `findingComponentKey`, the key of the published `Finding` component set. Skills fill it in after the first lookup in the `Sidekick` library (see Findings, Finding library).
+`workspaceFolder` is the shared design folder: one git repo for all Figma files, holding `.claude/settings.json` (the enabled design plugins) and one `<slug>/` folder per Figma file, holding `state` (the stage line) and the local cache. The brief and goals are not kept on disk: the Figma file's memory spec is the only copy. The folder path is not in the spec either (the config has it). Every entry has a `slug`; an entry without one is ignored. The `catalog` array is seeded by `review`. Optional: `findingComponentKey`, the key of the published `Finding` component set. Skills fill it in after the first lookup in the `Sidekick` library (see Findings, Finding library).
 
 Seed file `~/Library/Application Support/Sidekick/seeds/<slug>.md`, written by the Sidekick card (in its own support folder, not the design folder) before it launches `start`, and deleted by Sidekick once the stage line says `brief written`: a `---` header with `fileKey`, `name`, `slug` and `url`, then one `##` section per answer (Purpose and problem, Users and audience, Goals and success, Scope of this file, Platform, Brand). `unknown` means the designer skipped the question. Skills only read it, and only by its exact path.
 
@@ -201,12 +234,13 @@ What changed on the canvas is evidence and is not marked. Text the designer wrot
 
 ## Local cache
 
-Machine state that can be rebuilt from the Figma file at any time. It lives in the slug folder next to the state file, is never shown in the memory spec, and is per machine: two designers on one file each build their own. Only `digest` writes it; other skills read it.
+Machine state that can be rebuilt from the Figma file at any time. It lives in the slug folder next to the state file, is never shown in the memory spec, and is per machine: two designers on one file each build their own. Only `digest` writes it, with three exceptions: `context` writes `structure` and creates a flow's file when it registers the flow (`id`, `name`, `anchor`, `parent`), and `review` sets `last_review` and `next` in it. Other skills read it.
 
 ```
 <folderPath>/<slug>/
 ├── state                        stage line (the Sidekick card reads it; not cache)
 ├── fingerprint                  one line per flow, same format as the legacy index card
+├── structure                    first-level read of the page: a role per top-level node (see Page structure)
 ├── flows/F-01.md                one file per flow
 ├── screens/2002-1196.md         one file per described frame, named by node id with ':' as '-'
 └── parked.md                    minor findings held back until polish
@@ -241,19 +275,25 @@ Keep a description under about 25 lines. Describe what a designer would notice, 
 ```
 id: F-01
 name: Prototype flow
-anchor: section:2044:13149
+anchor: section:2044:13149     # section:<id>, or frames:<id>,<id> (the page's loose top-level frames)
+parent: -                      # or another flow id
 purpose: <from the flow mini-brief, or unknown>
 stage: explore                 # explore | refine | polish (inferred)
 stage_evidence: screenshots, placeholder amounts, no error states
 screens: 2002:1190 image 1; 2002:1193 image 2; 2002:1196 image 3
 variants: 2050:10 variant of 2002:1196
 states: 2050:22 state of 2002:1199
+not_described: 5:338 3. ready to send to agent; loose images in v01   # the gaps; review words them for `### Not covered yet`
+last_review: UX critique 2026-11-06    # set by review, empty before the first one
+next: Cognitive load                   # set by review
 updated: 2026-11-04
 ```
 
+`anchor`, `parent`, `last_review` and `next` are set by `context` and `review`; `digest` keeps them when it rewrites the file. When a flow file is missing (another machine, a wiped cache), `context` rebuilds `id`, `name`, `anchor` and `parent` from the `### Flows` bullet in the spec by matching its `section "<name>"` (or `loose frames`) against the page structure; `last_review` and `next` start empty.
+
 **Relations.** Identity is the Figma node id. A frame with an id seen before is the same screen (`edit` when its fingerprint or appearance changed). A new id is classified, in this order: a `state of` a sibling when it is nearly identical and one object differs (a toggle, an expanded row, an error shown); a `variant of` a screen when it covers the same step with a different layout or concept and sits next to it; otherwise `new`. A new id in a section that is not a registered flow belongs to a new flow (see `context`).
 
-**Stage.** Inferred per flow from fidelity: `explore` when the frames are mostly screenshots or rough shapes, copy or numbers are placeholders, or key states are missing; `polish` when frames use components, copy is real and the main states exist; `refine` in between. A stage the designer stated (in the brief, the flow mini-brief or chat) wins over the inferred one.
+**Stage.** Inferred from the frames in scope, not the whole page, by fidelity: `explore` when the frames are mostly screenshots or rough shapes, copy or numbers are placeholders, or key states are missing; `polish` when frames use components, copy is real and the main states exist; `refine` in between. A stage the designer stated in the flow mini-brief or in chat wins over the inferred one. The brief has no stage key.
 
 **Parked findings** (`parked.md`), one line each, same columns as legacy findings: `P-007 | content | P3 | frame:2002:1196 | claim | parked | reason | 2026-11-04`. They are not `FD-` findings and never appear in Figma until `review` brings them back (see `review`, Filter).
 
@@ -322,7 +362,7 @@ async function findMemorySpec() {
   return null;
 }
 // Create it, 80px left of the journey (the top-level section or frame holding `anchor`, or the leftmost node that is not a spec when the anchor is the page), top aligned.
-// Switch to the anchor's page first: the spec is created on the current page. `content` is the seed markdown: the H1 `# 🤖 Agentic memory.md` and the five H2 sections.
+// Switch to the anchor's page first: the spec is created on the current page. `content` is the seed markdown: the H1 `# 🤖 Agentic memory.md` and the five H2 sections (Open questions first).
 async function createMemorySpec(anchor, content) {
   const { specNodeId } = await figma.spec.createOnCanvasAsync({ title: SPEC_NAME, content });
   const spec = await figma.getNodeByIdAsync(specNodeId);
@@ -402,7 +442,7 @@ async function setKey(specId, entryId, key, value) {
 }
 ```
 
-For the `flows` and `status` entries (bullets that are not `key: value`), a bullet is changed with `replaceLines` after finding its line index in `readMemoryMarkdown(specId).split("\n")`; a new bullet is added by replacing the entry's last line with `[thatLine, newBullet]`, and a `(no flows registered yet)` placeholder bullet is replaced by the first real one. Close an open question by replacing its line with the ticked one.
+For a `### Flows` or `### Not covered yet` bullet (not `key: value`), a bullet is changed with `replaceLines` after finding its line index in `readMemoryMarkdown(specId).split("\n")`; a new bullet is added by replacing the entry's last line with `[thatLine, newBullet]`, and a placeholder bullet (`(no flows registered yet)`, `- Nothing that I know of.`) is replaced by the first real one. `### Not covered yet` is rewritten as a whole each pass. Close an open question by replacing its line with the ticked one, then move it under `### Answered` at the next catch-up.
 
 Finding helpers (instances). Findings are read with `readFindings()`, written with `writeFinding(f, libraryKey, anchorId)`, changed with `updateFinding(id, patch)`, and numbered with `nextFindingId()`. They scan every page, and `writeFinding` adds the instance to the findings frame of `anchorId` (a frame node id), creating that frame under the anchor when it doesn't exist. Remove a finding with `removeFinding(id)`, never with a bare `node.remove()`. Because they switch pages, call `await figma.setCurrentPageAsync(...)` again afterwards before touching other nodes. Prepend `const FILE_KEY = "<fileKey>";` before the block (used for links). Status values are the card statuses (`open`, `accepted`, ...), mapped to variants internally. `writeFinding` takes `f.scope` in normal syntax (`frame:3962:13783`) and shows the frame name as a link. Patch keys for `updateFinding`: `status`, `severity`, `claim`, `reason`, `scope`, `skill`, `date`.
 
