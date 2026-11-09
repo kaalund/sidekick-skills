@@ -71,7 +71,7 @@
 <main>
 
 <h1>design-memory</h1>
-<p class="lead">A Claude Code plugin that gives a Figma file a memory. It writes down the brief, what changed and why, and open questions in one Figma spec. It runs critiques and puts the findings on the canvas, under the frames they are about. Seven skills: two you run, four internal helpers, and one emergency fallback.</p>
+<p class="lead">A Claude Code plugin that gives a Figma file a memory. It writes down the brief, what changed and why, open questions, and what it knows (and hasn't looked at) in one Figma spec. It runs critiques and puts the findings on the canvas, under the frames they are about. Seven skills: two you run, four internal helpers, and one emergency fallback.</p>
 <div class="legend">
   <span><span class="dot" style="background:var(--main)"></span>You (or the card) start these</span>
   <span><span class="dot" style="background:var(--help)"></span>Internal helpers, loaded by other skills</span>
@@ -133,8 +133,8 @@
   <text class="m" x="830" y="468" text-anchor="middle">never called by another skill</text>
 
   <rect class="box help" x="40" y="496" width="900" height="48" rx="10"/>
-  <text class="t" x="490" y="518" text-anchor="middle">memory-format: the contract every skill loads</text>
-  <text class="m" x="490" y="534" text-anchor="middle">spec layout, entries, IDs, findings, preflight, state file, cache, Figma helper code</text>
+  <text class="t" x="490" y="518" text-anchor="middle">memory-format: the contract, in parts</text>
+  <text class="m" x="490" y="534" text-anchor="middle">spec · workspace and cache · state and preflight · findings · helper code. Each skill reads only its parts.</text>
 </svg>
 </div>
 
@@ -145,10 +145,10 @@
   <div class="skill main">
     <h3>start</h3>
     <div class="cmd">/design-memory:start</div>
-    <p>Sets up memory for a Figma file. Creates the <code>🤖 Agentic memory.md</code> spec next to the designs (or migrates the old Memory page) and writes a first file-level brief.</p>
+    <p>Sets up memory for a Figma file. Creates the <code>🤖 Agentic memory.md</code> spec next to the designs and writes a first file-level brief.</p>
     <dl>
       <dt>Reads</dt><dd>Sidekick form seed, first 3 frames, page and section names</dd>
-      <dt>Writes</dt><dd>The spec, the <code>.state</code> file, the registry entry</dd>
+      <dt>Writes</dt><dd>The spec, the <code>state</code> file, the registry entry</dd>
       <dt>Note</dt><dd>Guesses end in <code>(inferred)</code>. Your edits and comments always win on a re-run.</dd>
     </dl>
   </div>
@@ -159,7 +159,7 @@
     <p>One silent pass. Catches the memory up with what you did in Figma, picks the critique that fits the flow's stage, runs it, and puts the findings on the canvas.</p>
     <dl>
       <dt>Reads</dt><dd>Findings you triaged, the digest, the memory in scope</dd>
-      <dt>Writes</dt><dd>Change log, <code>Finding</code> instances, questions, status, <code>.state</code></dd>
+      <dt>Writes</dt><dd>Change log, <code>Finding</code> instances, questions, <em>What I know</em>, <code>state</code></dd>
       <dt>Note</dt><dd>Early-stage minor findings are parked until polish.</dd>
     </dl>
   </div>
@@ -167,9 +167,9 @@
   <div class="skill help">
     <h3>context</h3>
     <div class="cmd">internal</div>
-    <p>Works out which flow the selected frame belongs to and loads only the memory that applies. Registers a new flow on first use and asks once what it is for.</p>
+    <p>Works out which flow the selected frame belongs to and loads only the memory that applies. Reads the page once (current work vs earlier rounds). Registers a new flow on first use and asks once what it is for.</p>
     <dl>
-      <dt>Reads</dt><dd>Spec index, node ancestors, decisions, findings</dd>
+      <dt>Reads</dt><dd>Page structure, local flow files, node ancestors, decisions, findings</dd>
       <dt>Returns</dt><dd>Flow chain, kept entries, the "already considered" list</dd>
     </dl>
   </div>
@@ -198,7 +198,7 @@
   <div class="skill help">
     <h3>memory-format</h3>
     <div class="cmd">internal, the contract</div>
-    <p>The one source of truth. Spec layout, entry formats, ID rules, the <code>Finding</code> component, preflight checks, state file keys, cache layout, and the Figma helper code. If a skill disagrees with it, it wins.</p>
+    <p>The one source of truth, split so a skill only loads what it needs: an index plus files for the spec, workspace and cache, state and preflight, findings, and the Figma helper code. If a skill disagrees with it, it wins.</p>
   </div>
 
   <div class="skill fall">
@@ -210,6 +210,17 @@
 
 </div>
 
+<h2>Who reads which part of memory-format</h2>
+<p class="sub">It used to be one long file every skill loaded in full. Now <code>SKILL.md</code> is a short index, and each skill reads only the files it needs.</p>
+<table>
+  <tr><th>Part</th><th>Holds</th><th>Read by</th></tr>
+  <tr><td><code>spec.md</code></td><td>The spec: entries, open questions, what I know, scope, IDs, inferred content</td><td>start, context, review</td></tr>
+  <tr><td><code>workspace.md</code></td><td>Config, seed, local cache, page structure</td><td>resolve, context, digest, review</td></tr>
+  <tr><td><code>state.md</code></td><td>Preflight and the stage line</td><td>start, review, build-finding-component</td></tr>
+  <tr><td><code>findings.md</code></td><td>The <code>Finding</code> component, placement, pruning, library</td><td>start, context, review, build-finding-component</td></tr>
+  <tr><td><code>spec-helpers.js</code>, <code>finding-helpers.js</code></td><td>Code pasted into <code>use_figma</code></td><td>whoever writes to Figma</td></tr>
+</table>
+
 <h2>One review, step by step</h2>
 <p class="sub">What happens when you press Review on the card.</p>
 <ol class="steps" style="--c: var(--main)">
@@ -219,7 +230,7 @@
   <li style="--c:var(--main)"><b>Catch up</b>Logs your triage and edits to the change log. Marks fixed findings Done.<span class="by">review</span></li>
   <li style="--c:var(--ext)"><b>Critique</b>Picks a check by stage and what hasn't run, then runs it.<span class="by">catalog skill</span></li>
   <li style="--c:var(--main)"><b>Write</b>Drops findings under their frames. Parks minor ones early on.<span class="by">review</span></li>
-  <li style="--c:var(--main)"><b>Hand over</b>Updates status and the state file. The card shows the result.<span class="by">review</span></li>
+  <li style="--c:var(--main)"><b>Hand over</b>Rewrites <em>What I know</em> in the spec and updates the state file. The card shows the result.<span class="by">review</span></li>
 </ol>
 
 <h2>What a finding goes through</h2>
@@ -237,11 +248,12 @@
 <p class="sub">Figma holds the memory. The folder only holds state and a cache that can be rebuilt.</p>
 <table>
   <tr><th>What</th><th>Where</th><th>Written by</th></tr>
-  <tr><td>Brief, decisions, change log, questions</td><td>Figma spec <code>🤖 Agentic memory.md</code></td><td>start, review</td></tr>
+  <tr><td>Open questions, what I know, brief, decisions, change log (10 newest cards, older ones one line per month)</td><td>Figma spec <code>🤖 Agentic memory.md</code></td><td>start, review</td></tr>
   <tr><td>Findings</td><td><code>Finding</code> instances in a findings frame below each frame</td><td>review (you change the status)</td></tr>
-  <tr><td>Stage line for the card</td><td><code>files/&lt;slug&gt;.state</code> in the shared design folder</td><td>start, review</td></tr>
+  <tr><td>Stage line for the card</td><td><code>&lt;slug&gt;/state</code> in the shared design folder</td><td>start, review</td></tr>
   <tr><td>File registry, review catalog</td><td><code>.design-memory/config.json</code></td><td>resolve, review</td></tr>
-  <tr><td>Screen descriptions, fingerprints, parked findings</td><td><code>files/&lt;slug&gt;/</code> local cache</td><td>digest (parked: review)</td></tr>
+  <tr><td>Screen descriptions, fingerprints, flow files, page structure, parked findings</td><td><code>&lt;slug&gt;/</code> local cache</td><td>digest (parked: review)</td></tr>
+  <tr><td>Full change log cards rolled out of the spec</td><td><code>&lt;slug&gt;/changelog.md</code></td><td>review</td></tr>
 </table>
 
 <h2>What stops a run</h2>
@@ -255,7 +267,7 @@
   <tr><td><code>empty-target</code></td><td>Select a frame with content (review only)</td></tr>
 </table>
 
-<footer>Generated from the skills in <code>skills/*/SKILL.md</code>. If a skill changes, this page needs a touch-up.</footer>
+<footer>Generated from the skills in <code>skills/</code>. If a skill changes, this page needs a touch-up.</footer>
 </main>
 </body>
 </html>

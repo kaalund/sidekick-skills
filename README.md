@@ -13,12 +13,12 @@ Choose user scope so it works from any directory. For development you can instea
 
 ## Commands
 
-- `/start` sets up the memory spec (and moves an older Memory page into it), writes a first project brief from the Sidekick form and what it sees in the file (guesses are marked `(inferred)`, you correct them in the spec), and registers the file in the shared design folder.
-- `/review` looks at what changed since last time, catches the memory up, picks the critique that fits the flow's stage and runs it with scoped memory. Findings land on the canvas for triage in Figma; minor ones are parked during exploration.
+- `/design-memory:start` sets up the memory spec, writes a first project brief from the Sidekick form and what it sees in the file (guesses are marked `(inferred)`, you correct them in the spec), and registers the file in the shared design folder.
+- `/design-memory:review` looks at what changed since last time, catches the memory up, picks the critique that fits the flow's stage and runs it with scoped memory. Findings land on the canvas for triage in Figma; minor ones are parked during exploration.
 
 The skills keep a small state file (`<slug>/state` in the shared design folder) up to date; the Sidekick card reads it to show your stage and one button for the next step.
 
-Internal skills: `memory-format` (the contract), `resolve` (file and folder lookup), `context` (scope and flow registration), `digest` (screen descriptions in the local cache `<slug>/`, what changed, the flow's stage).
+Internal skills: `memory-format` (the contract, split into an index and files for the spec, workspace and cache, state and preflight, findings, and the Figma helper code, so each skill reads only what it needs), `resolve` (file and folder lookup), `context` (scope and flow registration), `digest` (screen descriptions in the local cache `<slug>/`, what changed, the flow's stage).
 
 ## Where things live
 
