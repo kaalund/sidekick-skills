@@ -4,11 +4,15 @@ Part of `memory-format`.
 
 ## Memory spec
 
-The memory is one Figma spec (a native `SPEC_BLOCK` document, GitHub-flavoured markdown) named exactly `🤖 Agentic memory.md`, on the page with the designs. It sits 80px to the left of the journey section it relates to, top aligned with it, so the designer reads it next to the flows. Skills read and write it only through `figma.spec.*` (`spec-helpers.js`), never through text nodes.
+The memory is one Figma spec (a native `SPEC_BLOCK` document, GitHub-flavoured markdown) named exactly `🤖 Agentic memory.md`, one per page, on the page with the designs. A page is a scoped feature or journey, and its spec is the memory for that page only: a file with several pages has one spec per page, and a page with no spec gets one created silently the first time a skill works on it (Page spec). It sits 80px to the left of the journey section it relates to, top aligned with it, so the designer reads it next to the flows. Skills read and write it only through `figma.spec.*` (`spec-helpers.js`), never through text nodes.
 
 The document is the H1 title block, then five H2 sections in this order: `## Open questions`, `## What I know`, `## Brief`, `## Decisions`, `## Change log`. Never name an H3 like a section.
 
 The spec is for the designer to read, so it holds only what a designer needs: what is waiting for them (open questions first, so they are never buried), what the agent understands about the file and where it is blind (`What I know`), the brief, the decisions and a short history. No node ids, folder paths, fingerprints or counts the cache already holds: machine state lives in the local cache (`workspace.md`). A frame is named in words and, where a pointer helps, linked with `[name](https://www.figma.com/design/<fileKey>/?node-id=<id with ':' replaced by '-'>)`.
+
+## Page spec
+
+A page's spec is found with `findMemorySpec(page)` (top level of that page only). When there is none, create it with `createMemorySpec`: the five sections in order (`## Open questions` empty), `### Flows` with the bullet `(no flows registered yet)`, `### Not covered yet` with `- I have not looked at any frame yet.`, and a `### file` brief where every key is `unknown` except `constraints: WCAG compliance is mandatory`. The `file` in `### file` and in scope `file` means this whole page spec (the name is kept so existing specs still read). `start` fills the brief from the seed and the linked node; a spec created by `context` leaves it to `review`'s Refine guesses. Create it only on the page of the target node, never on another page.
 
 ## Entries
 
@@ -39,7 +43,7 @@ An entry is an `### <ID> <title>` heading, a blank line, then `- key: value` lin
 
 Under `## Brief`: `### file` and `### F-03`.
 
-- File brief keys: `purpose`, `users`, `goals`, `constraints`, `platform`, `brand`, `references`, `risks`.
+- Brief keys (the `### file` entry, one per page spec): `purpose`, `users`, `goals`, `constraints`, `platform`, `brand`, `references`, `risks`.
 - Flow mini-brief keys: `for`, `who`, `done_when`.
 - A skipped answer is the literal `unknown`. A value a skill guessed instead of being told ends in `(inferred)`.
 

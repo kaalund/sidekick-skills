@@ -3,15 +3,10 @@ const SPEC_NAME = "🤖 Agentic memory.md";
 const MARKS = /\[\/?comment:[0-9a-fA-F-]+\]/g;   // designer comment markers inside the markdown
 const plain = l => l.replace(MARKS, "");
 
-// The memory spec, searched page by page (the current page is left on the page that holds it).
-async function findMemorySpec() {
-  for (const page of figma.root.children) {
-    await figma.setCurrentPageAsync(page);
-    const s = page.findAllWithCriteria({ types: ["SPEC_BLOCK"] })
-      .find(n => n.specBlockType === "DOCUMENT" && n.name === SPEC_NAME);
-    if (s) return s;
-  }
-  return null;
+// The page's memory spec: a top-level node of the page, so no tree walk and no other page is loaded. Leaves the current page on `page`.
+async function findMemorySpec(page = figma.currentPage) {
+  await figma.setCurrentPageAsync(page);
+  return page.children.find(n => n.type === "SPEC_BLOCK" && n.specBlockType === "DOCUMENT" && n.name === SPEC_NAME) || null;
 }
 // Create it, 80px left of the journey (the top-level section or frame holding `anchor`, or the leftmost node that is not a spec when the anchor is the page), top aligned.
 // Switch to the anchor's page first: the spec is created on the current page. `content` is the seed markdown: the H1 `# 🤖 Agentic memory.md` and the five H2 sections (Open questions first).

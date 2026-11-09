@@ -23,5 +23,6 @@ This file is the index. The rest is in sibling files in this skill's folder (pat
 - Load the `figma-use` skill before every `use_figma` call.
 - Do not use `setPluginData`, `createImageAsync` or `loadAllPagesAsync`; they are unsupported.
 - Switch pages with `await figma.setCurrentPageAsync(page)` before reading or writing its nodes.
+- One memory spec per page: a page is a scoped feature or journey. Look only at the target page, and find its spec as a top-level node (`findMemorySpec`). Never walk the tree of a page or the document (`findAll`, `findOne`, `findAllWithCriteria` on a page are for finding instances only, `allFindingNodes`), and never loop over every page.
 - Never call `get_metadata` on a page or a section: it returns the whole tree. List the first level with one `use_figma` script, one row per node (`id|type|name|x,y|WxH|childCount`).
 - Memory is only ever visible nodes: the memory spec, and finding instances in the findings frames below the frames they are about.

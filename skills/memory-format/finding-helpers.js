@@ -14,13 +14,9 @@ async function ensureFindingFonts() {
 }
 async function findingSet(libraryKey) {
   if (libraryKey) return await figma.importComponentSetByKeyAsync(libraryKey);
-  // A set that already exists locally, on any page (made by build-finding-component). Never build one here.
-  for (const page of figma.root.children) {
-    await figma.setCurrentPageAsync(page);
-    const s = page.findAllWithCriteria({ types: ["COMPONENT_SET"] }).find(n => n.name === "Finding");
-    if (s) return s;
-  }
-  return null;
+  // A set that already exists locally, on the current page (made by build-finding-component, in its components frame). Never build one here.
+  const box = figma.currentPage.children.find(n => n.type === "FRAME" && n.name === "🤖 Sidekick components");
+  return (box && box.children.find(n => n.type === "COMPONENT_SET" && n.name === "Finding")) || null;
 }
 function propKey(inst, name) {
   const key = Object.keys(inst.componentProperties).find(k => k.replace(/#.*$/, "") === name);
@@ -57,13 +53,9 @@ function findingFromInstance(n) {
     date: propValue(n, "Date")
   };
 }
+// The current page only: one spec and one set of findings per page. Switch to the page first.
 async function allFindingNodes() {
-  const out = [];
-  for (const page of figma.root.children) {
-    await figma.setCurrentPageAsync(page);
-    page.findAll(n => n.type === "INSTANCE" && n.name.startsWith("memory/findings/")).forEach(n => out.push(n));
-  }
-  return out;
+  return figma.currentPage.findAllWithCriteria({ types: ["INSTANCE"] }).filter(n => n.name.startsWith("memory/findings/"));
 }
 async function readFindings() {
   return (await allFindingNodes()).map(findingFromInstance);

@@ -10,18 +10,17 @@ Part of `memory-format`.
 |---|---|---|
 | `specs` | `whoami` shows `specs_enabled: true` on the plan that owns the file. With several plans and no way to tell which owns the file, that is this blocker too, with `detail=Couldn't tell which Figma plan owns this file` | `Turn on Figma Specs for this file's plan` |
 | `login` | the Figma MCP session is logged in: no call fails with an authentication error, and `whoami` returns a user | `Log in to Figma in Raicode (run /mcp)` |
-| `memory` | a memory spec exists (`findMemorySpec`). `start` skips this check: it creates the spec | `The memory spec is missing: press Retry to set it up` |
-| `library` | the `Sidekick` library is enabled in the file: a FRESH `get_libraries` call every time, never an earlier result (on a Retry the designer enabled it after the first stop), even when the config has a `findingComponentKey`. `Sidekick` counts only when it is in `libraries_added_to_file`, not when it is only available to add. A file that already holds a local `Finding` set on a page skips this check | `Enable the Sidekick library: Assets, Libraries, Sidekick` |
+| `library` | the `Sidekick` library is enabled in the file: a FRESH `get_libraries` call every time, never an earlier result (on a Retry the designer enabled it after the first stop), even when the config has a `findingComponentKey`. `Sidekick` counts only when it is in `libraries_added_to_file`, not when it is only available to add. A page that already holds a local `Finding` set skips this check | `Enable the Sidekick library: Assets, Libraries, Sidekick` |
 | `empty-target` | `review` only: the target node exists and is not an empty frame (it has children or an image fill) | `Select a frame with content, then press Retry` |
 
-`start` runs `specs`, `login` and `library` (the library check does not need the spec, so it runs before the spec is created).
+`start` runs `specs`, `login` and `library` (the library check does not need the spec, so it runs before the spec is created). There is no `memory` check: a page without a spec gets one created silently (`spec.md`, Page spec). `memory` stays a valid `needs` value only so an old state file still reads.
 
 An authentication error (or no user) on `whoami` is `login`, not `specs`, and `login` takes precedence. A check that cannot run because an earlier one failed (no login, so no `get_libraries`) counts as not checked: list it as unchecked in the message, and it is never the `needs` value.
 
 When every check passes, carry on. When any fails, stop before touching Figma or the cache:
 
 1. Print EVERY failing check with its exact fix in one terminal message, one line each, for example: "Can't start yet. 1) Specs is off: turn on Figma Specs for this file's plan. 2) The Sidekick library isn't enabled: in Figma, open Assets, then Libraries, and turn on Sidekick. Then press Retry on the card."
-2. Write the state file with `needs=<name of the FIRST failing check in the table's order>` and `detail=<that check's fix sentence>` (one line, no trailing period), `stage=review` for a review and `stage=start` for a start (the card's Retry re-runs that skill), except that a `memory` blocker always writes `stage=start`, even from a review: Retry then runs `/design-memory:start`, which creates the spec. `progress=` and `result=` stay EMPTY: a skill that wrote `progress` and stopped is shown as "waiting on the terminal", which would hide the fix. Copy every other key over (see Stage line). The card shows `detail` for every `needs` value except `library`, which has its own picture card (its `detail` is a fallback).
+2. Write the state file with `needs=<name of the FIRST failing check in the table's order>` and `detail=<that check's fix sentence>` (one line, no trailing period), `stage=review` for a review and `stage=start` for a start (the card's Retry re-runs that skill). `progress=` and `result=` stay EMPTY: a skill that wrote `progress` and stopped is shown as "waiting on the terminal", which would hide the fix. Copy every other key over (see Stage line). The card shows `detail` for every `needs` value except `library`, which has its own picture card (its `detail` is a fallback).
 
 ## Stage line
 

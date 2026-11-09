@@ -28,7 +28,7 @@ Status mapping (card status on the left, `Status` variant on the right): `open` 
 The `Finding` component set lives in the published `Sidekick` Figma library. Skills only import it and make instances; they never build it (the one exception is `build-finding-component`). Resolve the key before the first `writeFinding` of a run:
 
 1. Use `findingComponentKey` from the config if it is there.
-2. Otherwise, if the file holds a local `Finding` component set on any page (made by `build-finding-component`), use it: no key.
+2. Otherwise, if the current page holds a local `Finding` component set (made by `build-finding-component`, in its `🤖 Sidekick components` frame), use it: no key.
 3. Otherwise the Preflight `library` check (`state.md`) has already confirmed `Sidekick` is enabled. Call `search_design_system` with `{entity: "component", query: "Finding"}` and `includeLibraryKeys: [<Sidekick library key>]`, take the component set named exactly `Finding`, and save its key in the config as `findingComponentKey` so the lookup happens once.
 4. Pass the key to `writeFinding` as `libraryKey`. If the import throws, or step 3 finds no `Finding` set, follow Missing library.
 
